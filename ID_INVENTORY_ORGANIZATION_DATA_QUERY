@@ -1,0 +1,3 @@
+select *
+from   apps.org_organization_definitions
+where organization_code = 'DMG'
