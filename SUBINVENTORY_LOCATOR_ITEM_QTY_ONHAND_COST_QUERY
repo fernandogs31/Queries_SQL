@@ -1,0 +1,21 @@
+select
+mwb.organization_id, 
+mwb.organization_code,
+mwb.subinventory_code,
+mwb.locator_id,
+mwb.locator,
+mwb.inventory_item_id, 
+mwb.item, 
+mwb.item_description,
+mwb.uom, 
+mwb.on_hand,
+cic.item_cost
+from 
+MTL_ONHAND_TOTAL_MWB_V mwb,
+cst_item_cost_type_v cic,
+mtl_item_locations_kfv il
+where 1=1
+and cic.inventory_item_id = mwb.inventory_item_id
+and cic.organization_id = mwb.organization_id
+and il.inventory_location_id = mwb.locator_id
+and mwb.organization_code = 'MOC';
