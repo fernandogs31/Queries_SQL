@@ -1,0 +1,76 @@
+--Query 1 -achar o LPN ID e colocar na query abaixo
+SELECT w.lpn_id
+    ,  w.*
+FROM   apps.wms_license_plate_numbers w
+WHERE  w.license_plate_number = 'DMG5356062' 
+
+--Query 2 -Itens ainda pendentes de inspeção - Step 7
+SELECT  M.group_mark_id 
+    ,   decode(M.current_status,'1','Defined but not used'
+                               ,'3','Resides in stores'
+                               ,'4','Issued out of stores'
+                               ,'5','Resides in intransit'
+                               ,'6','Pending'
+                               ,'7','In Receiving') Current_status
+    ,   decode(M.inspection_status,'2','Inspecionado','1','Não inspecionado') status_inspection
+    ,   m.*
+FROM    apps.MTL_SERIAL_NUMBERS M
+WHERE   1=1
+AND m.serial_number IN
+  (SELECT  serial_number
+    FROM   apps.wms_lpn_histories
+    WHERE  parent_lpn_id = 47595563)
+AND m.inventory_item_id IN
+  (SELECT  inventory_item_id
+    FROM   apps.wms_lpn_histories
+    WHERE  parent_lpn_id = 47595563)
+
+--Query 3 - Etapa 8 - QA se retornar com dados teve a inspeção de QA em branco nao foi feita a inspeção
+SELECT  qdipv.br_purchase_order
+      , qdipv.br_purchase_order_line
+      , qdipv.item_id
+      , qdipv.item
+      , qdipv.quantity
+      , qdipv.br_item_status
+      , qdipv.br_item_type
+      , qdipv.uom
+      , qdipv.inspection_result
+      , rt.*
+FROM
+  apps.Q_DMG_INSPECTION_PLAN_V qdipv,
+  apps.po_headers_all pha,
+  apps.po_lines_all pla,
+  apps.rcv_transactions rt,
+  apps.wms_license_plate_numbers wlpn,
+  APPS.WMS_LPN_CONTENTS WPC,
+  apps.org_organization_definitions ood
+WHERE
+  1                                =1
+AND qdipv.br_purchase_order        = pha.segment1
+AND pha.po_header_id               = pla.po_header_id
+AND pla.line_num                   = qdipv.BR_PURCHASE_ORDER_LINE
+AND rt.po_header_id                = pha.po_header_id
+AND rt.transfer_lpn_id             = wlpn.lpn_id
+AND upper(qdipv.inspection_result) = upper(rt.transaction_type)
+AND wlpn.lpn_id                    = 47943564
+AND rownum                = 1
+AND ood.organization_code = 'DMG'
+AND WPC.PARENT_LPN_ID     = WLPN.LPN_ID
+AND wpc.inventory_item_id = qdipv.item_id
+
+--Query 4 - de move order para ver se a ordem nao esta "travada" quantity detailed diferente de zero teve problema se for zero OK
+--roda a query 1 para pegar o LPN ID    
+SELECT a.line_id 
+       ,a.primary_quantity
+       ,a.quantity
+       ,a.quantity_detailed
+       ,a.quantity_delivered
+       ,a.reason_id
+       ,a.line_status
+       ,a.put_away_strategy_id
+       ,a.inspection_status
+       ,a.*
+FROM    apps.mtl_txn_request_lines a
+WHERE   a.lpn_id in 47595563 
+and a.quantity > 0
+order by 3 
