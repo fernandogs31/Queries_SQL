@@ -1,0 +1,355 @@
+SELECT DISTINCT
+eid.nr_declaracao "DI",
+eii.invoice_num "Invoice Number",
+eii.dt_emissao "Invoice Date",
+ece.razao_social "Importer Name",
+ece.endereco "Importer Address",
+ece.complemento_end "Additional Address",
+ece.endereco_numero "Number",
+ece.bairro "Neighborhood",
+ece.cidade "City",
+DECODE(ece.uf_id,4770 , 'MG',
+                 117006,'PE',
+                 4769,'SP') "State",
+ece.cep "Zip Code",
+ece.CNPJ "Tax Id",
+ece.ins_estadual "State Id",
+eie.nome "Exporter Name",
+eies.endereco "Exporter Address",
+eies.endereco_sem_numero "Additional Address",
+eies.endereco_numero "Number",
+eies.bairro "Neighborhood",
+eies.cidade "City",
+eies.estado "State",
+eies.cep "Zip Code",
+ectb5.descricao "Acquisition Country",
+eie1.nome "Supplier Name",
+eies1.endereco "Supplier Address",
+eies1.endereco_sem_numero "Additional Address",
+eies1.endereco_numero "Number",
+eies1.bairro "Neighborhood",
+eies1.cidade "City",
+eies1.estado "State",
+eies1.cep "Zip Code",
+ectb6.descricao "Origin Country",
+eitp.codigo "Payment Terms",
+ectb.codigo "Invoice Currency",
+ectb1.codigo "Incoterm",
+eii.valor_total "Invoice Total Amount",
+eiil.nr_linha "Invoice Line Number",
+msi.segment1 "Part Number",
+eiil.descricao "Part Number Description",
+ectn.codigo "Tariff Code",
+ectb4.codigo "Code measure unit",
+ectb4.descricao "Measure unit",
+eiil.qtde "Item Quantity",
+eiil.preco_unitario_m "Unit Value Amount",
+(eiil.preco_unitario_m * eiil.qtde) "Total Value Amount",
+eiil.pesoliq_unit "Unit Net Weight",
+eiil.pesoliq_tot "Total Net Weight",
+(eiil.pesobrt_tot / eiil.qtde) "Unit Gross Weight",
+eiil.pesobrt_tot "Total Gross Weight",
+DECODE(eiil.ausencia_fabric, 1, 'Same Exporter_Manufacturer',
+                             2, 'Different Exporter_Manufacturer',
+                             3, 'Unknown Manufecturer') "Exporter_Manufacturer Status",
+ectb5.descricao "COO"
+--DECODE (eiil.pais_origem_id, null,'NULL')  "COO"
+--ectb8.descricao "Mode of transport",
+--ectb7.codigo " Freight Currency",
+--eic.valor_total_m "Total Freight Amount"
+
+FROM 
+ecomex.imp_invoices eii,
+ecomex.imp_invoices_lin eiil,
+ecomex.cmx_organizacoes eco,
+ecomex.imp_entidades eie,
+ecomex.imp_entidades_sites eies,
+ecomex.imp_entidades eie1,
+ecomex.imp_entidades_sites eies1,
+ecomex.imp_termos_pgto eitp,
+ecomex.cmx_tabelas_b ectb,
+ecomex.cmx_tabelas_b ectb1,
+ecomex.cmx_tabelas_b ectb2,
+ecomex.cmx_tabelas_b ectb3,
+ecomex.cmx_tab_ncm ectn,
+ecomex.cmx_tabelas_b ectb4,
+apps.mtl_system_items_b msi,
+ecomex.cmx_tabelas_b ectb5,
+ecomex.cmx_tabelas_b ectb6,
+ecomex.cmx_empresas ece,
+ecomex.imp_declaracoes eid
+--ecomex.imp_conhecimentos eic,
+--ecomex.imp_embarques eie,
+--ecomex.cmx_tabelas_b ectb7,
+--ecomex.cmx_tabelas_b ectb8
+--ecomex.imp_fabricantes_sites eifs
+--ecomex.cmx_tabelas_b ectb9
+
+WHERE 1 = 1
+AND eii.dt_emissao between '01/04/2021' and '30/04/2021'
+AND eii.empresa_id = ece.empresa_id
+AND eii.invoice_id = eiil.invoice_id (+)
+AND eii.organizacao_id = eco.organizacao_id
+AND eii.export_id = eie.entidade_id
+AND eii.export_site_id = eies.entidade_site_id
+AND eii.fornec_id = eie1.entidade_id
+AND eii.fornec_site_id = eies1.entidade_site_id
+AND eii.termo_id = eitp.termo_id
+AND eii.moeda_id = ectb1.tabela_id
+AND eii.incoterm_id = ectb.tabela_id
+AND eii.local_cvenda_id = ectb2.tabela_id
+AND eiil.tp_linha_id = ectb3.tabela_id
+AND eiil.class_fiscal_id = ectn.ncm_id
+AND eiil.un_medida_id = ectb4.tabela_id
+AND eiil.item_id = msi.inventory_item_id
+AND eies.pais_id = ectb5.tabela_id
+AND eies1.pais_id = ectb6.tabela_id
+AND eii.embarque_id = eid.embarque_id
+--AND eie.conhec_id = eic.conhec_id
+--AND eic.moeda_id = ectb7.tabela_id
+--AND eic.via_transporte_id = ectb8.tabela_id
+AND eiil.ausencia_fabric = 1
+--AND eiil.pais_origem_id is null
+--AND eiil.fabric_site_id = eifs.fabric_site_id
+--AND eiil.pais_origem_id = ectb9.tabela_id
+AND eco.codigo in('U42')
+--AND eii.invoice_num in()
+
+//
+
+SELECT DISTINCT
+eid.nr_declaracao "DI",
+eii.invoice_num "Invoice Number",
+eii.dt_emissao "Invoice Date",
+ece.razao_social "Importer Name",
+ece.endereco "Importer Address",
+ece.complemento_end "Additional Address",
+ece.endereco_numero "Number",
+ece.bairro "Neighborhood",
+ece.cidade "City",
+DECODE(ece.uf_id,4770 , 'MG',
+                 117006,'PE',
+                 4769,'SP') "State",
+ece.cep "Zip Code",
+ece.CNPJ "Tax Id",
+ece.ins_estadual "State Id",
+eie.nome "Exporter Name",
+eies.endereco "Exporter Address",
+eies.endereco_sem_numero "Additional Address",
+eies.endereco_numero "Number",
+eies.bairro "Neighborhood",
+eies.cidade "City",
+eies.estado "State",
+eies.cep "Zip Code",
+ectb5.descricao "Acquisition Country",
+eie1.nome "Supplier Name",
+eies1.endereco "Supplier Address",
+eies1.endereco_sem_numero "Additional Address",
+eies1.endereco_numero "Number",
+eies1.bairro "Neighborhood",
+eies1.cidade "City",
+eies1.estado "State",
+eies1.cep "Zip Code",
+ectb6.descricao "Origin Country",
+eitp.codigo "Payment Terms",
+ectb.codigo "Invoice Currency",
+ectb1.codigo "Incoterm",
+eii.valor_total "Invoice Total Amount",
+eiil.nr_linha "Invoice Line Number",
+msi.segment1 "Part Number",
+eiil.descricao "Part Number Description",
+ectn.codigo "Tariff Code",
+ectb4.codigo "Code measure unit",
+ectb4.descricao "Measure unit",
+eiil.qtde "Item Quantity",
+eiil.preco_unitario_m "Unit Value Amount",
+(eiil.preco_unitario_m * eiil.qtde_utilizada) "Total Value Amount",
+eiil.pesoliq_unit "Unit Net Weight",
+eiil.pesoliq_tot "Total Net Weight",
+(eiil.pesobrt_tot / eiil.qtde) "Unit Gross Weight",
+eiil.pesobrt_tot "Total Gross Weight",
+DECODE(eiil.ausencia_fabric, 1, 'Same Exporter_Manufacturer',
+                             2, 'Different Exporter_Manufacturer',
+                             3, 'Unknown Manufecturer') "Exporter_Manufacturer Status",
+ectb9.descricao "COO"
+--DECODE (eiil.pais_origem_id, null,'NULL')  "COO"
+--ectb8.descricao "Mode of transport",
+--ectb7.codigo " Freight Currency",
+--eic.valor_total_m "Total Freight Amount"
+
+FROM 
+ecomex.imp_invoices eii,
+ecomex.imp_invoices_lin eiil,
+ecomex.cmx_organizacoes eco,
+ecomex.imp_entidades eie,
+ecomex.imp_entidades_sites eies,
+ecomex.imp_entidades eie1,
+ecomex.imp_entidades_sites eies1,
+ecomex.imp_termos_pgto eitp,
+ecomex.cmx_tabelas_b ectb,
+ecomex.cmx_tabelas_b ectb1,
+ecomex.cmx_tabelas_b ectb2,
+ecomex.cmx_tabelas_b ectb3,
+ecomex.cmx_tab_ncm ectn,
+ecomex.cmx_tabelas_b ectb4,
+apps.mtl_system_items_b msi,
+ecomex.cmx_tabelas_b ectb5,
+ecomex.cmx_tabelas_b ectb6,
+ecomex.cmx_empresas ece,
+--ecomex.imp_conhecimentos eic,
+--ecomex.imp_embarques eie,
+--ecomex.cmx_tabelas_b ectb7,
+--ecomex.cmx_tabelas_b ectb8
+ecomex.imp_fabricantes_sites eifs,
+ecomex.cmx_tabelas_b ectb9,
+ecomex.imp_declaracoes eid
+
+
+WHERE 1 = 1
+AND eii.dt_emissao between '01/01/2021' and '31/01/2021'
+AND eii.empresa_id = ece.empresa_id
+AND eii.invoice_id = eiil.invoice_id (+)
+AND eii.organizacao_id = eco.organizacao_id
+AND eii.export_id = eie.entidade_id
+AND eii.export_site_id = eies.entidade_site_id
+AND eii.fornec_id = eie1.entidade_id
+AND eii.fornec_site_id = eies1.entidade_site_id
+AND eii.termo_id = eitp.termo_id
+AND eii.moeda_id = ectb1.tabela_id
+AND eii.incoterm_id = ectb.tabela_id
+AND eii.local_cvenda_id = ectb2.tabela_id
+AND eiil.tp_linha_id = ectb3.tabela_id
+AND eiil.class_fiscal_id = ectn.ncm_id
+AND eiil.un_medida_id = ectb4.tabela_id
+AND eiil.item_id = msi.inventory_item_id
+AND eies.pais_id = ectb5.tabela_id
+AND eies1.pais_id = ectb6.tabela_id
+AND eii.embarque_id = eid.embarque_id
+--AND eie.conhec_id = eic.conhec_id
+--AND eic.moeda_id = ectb7.tabela_id
+--AND eic.via_transporte_id = ectb8.tabela_id
+--AND eiil.ausencia_fabric = 3
+--AND eiil.pais_origem_id is null
+AND eiil.fabric_site_id = eifs.fabric_site_id
+AND eiil.pais_origem_id = ectb9.tabela_id
+AND eco.codigo not in('U42')
+--AND eii.invoice_num in()
+
+//
+
+SELECT DISTINCT
+eid.nr_declaracao "DI",
+eii.invoice_num "Invoice Number",
+eii.dt_emissao "Invoice Date",
+ece.razao_social "Importer Name",
+ece.endereco "Importer Address",
+ece.complemento_end "Additional Address",
+ece.endereco_numero "Number",
+ece.bairro "Neighborhood",
+ece.cidade "City",
+DECODE(ece.uf_id,4770 , 'MG',
+                 117006,'PE',
+                 4769,'SP') "State",
+ece.cep "Zip Code",
+ece.CNPJ "Tax Id",
+ece.ins_estadual "State Id",
+eie.nome "Exporter Name",
+eies.endereco "Exporter Address",
+eies.endereco_sem_numero "Additional Address",
+eies.endereco_numero "Number",
+eies.bairro "Neighborhood",
+eies.cidade "City",
+eies.estado "State",
+eies.cep "Zip Code",
+ectb5.descricao "Acquisition Country",
+eie1.nome "Supplier Name",
+eies1.endereco "Supplier Address",
+eies1.endereco_sem_numero "Additional Address",
+eies1.endereco_numero "Number",
+eies1.bairro "Neighborhood",
+eies1.cidade "City",
+eies1.estado "State",
+eies1.cep "Zip Code",
+ectb6.descricao "Origin Country",
+eitp.codigo "Payment Terms",
+ectb.codigo "Invoice Currency",
+ectb1.codigo "Incoterm",
+eii.valor_total "Invoice Total Amount",
+eiil.nr_linha "Invoice Line Number",
+msi.segment1 "Part Number",
+eiil.descricao "Part Number Description",
+ectn.codigo "Tariff Code",
+ectb4.codigo "Code measure unit",
+ectb4.descricao "Measure unit",
+eiil.qtde "Item Quantity",
+eiil.preco_unitario_m "Unit Value Amount",
+(eiil.preco_unitario_m * eiil.qtde_utilizada) "Total Value Amount",
+eiil.pesoliq_unit "Unit Net Weight",
+eiil.pesoliq_tot "Total Net Weight",
+(eiil.pesobrt_tot / eiil.qtde) "Unit Gross Weight",
+eiil.pesobrt_tot "Total Gross Weight",
+DECODE(eiil.ausencia_fabric, 1, 'Same Exporter_Manufacturer',
+                             2, 'Different Exporter_Manufacturer',
+                             3, 'Unknown Manufecturer') "Exporter_Manufacturer Status",
+ectb5.descricao "COO"
+--DECODE (eiil.pais_origem_id, null,'NULL')  "COO"
+--ectb8.descricao "Mode of transport",
+--ectb7.codigo " Freight Currency",
+--eic.valor_total_m "Total Freight Amount"
+
+FROM 
+ecomex.imp_invoices eii,
+ecomex.imp_invoices_lin eiil,
+ecomex.cmx_organizacoes eco,
+ecomex.imp_entidades eie,
+ecomex.imp_entidades_sites eies,
+ecomex.imp_entidades eie1,
+ecomex.imp_entidades_sites eies1,
+ecomex.imp_termos_pgto eitp,
+ecomex.cmx_tabelas_b ectb,
+ecomex.cmx_tabelas_b ectb1,
+ecomex.cmx_tabelas_b ectb2,
+ecomex.cmx_tabelas_b ectb3,
+ecomex.cmx_tab_ncm ectn,
+ecomex.cmx_tabelas_b ectb4,
+apps.mtl_system_items_b msi,
+ecomex.cmx_tabelas_b ectb5,
+ecomex.cmx_tabelas_b ectb6,
+ecomex.cmx_empresas ece,
+ecomex.imp_declaracoes eid
+--ecomex.imp_conhecimentos eic,
+--ecomex.imp_embarques eie,
+--ecomex.cmx_tabelas_b ectb7,
+--ecomex.cmx_tabelas_b ectb8
+--ecomex.imp_fabricantes_sites eifs
+--ecomex.cmx_tabelas_b ectb9
+
+WHERE 1 = 1
+AND eii.dt_emissao between '01/01/2021' and '31/01/2021'
+AND eii.empresa_id = ece.empresa_id
+AND eii.invoice_id = eiil.invoice_id (+)
+AND eii.organizacao_id = eco.organizacao_id
+AND eii.export_id = eie.entidade_id
+AND eii.export_site_id = eies.entidade_site_id
+AND eii.fornec_id = eie1.entidade_id
+AND eii.fornec_site_id = eies1.entidade_site_id
+AND eii.termo_id = eitp.termo_id
+AND eii.moeda_id = ectb1.tabela_id
+AND eii.incoterm_id = ectb.tabela_id
+AND eii.local_cvenda_id = ectb2.tabela_id
+AND eiil.tp_linha_id = ectb3.tabela_id
+AND eiil.class_fiscal_id = ectn.ncm_id
+AND eiil.un_medida_id = ectb4.tabela_id
+AND eiil.item_id = msi.inventory_item_id
+--AND eies.pais_id = ectb5.tabela_id
+AND eies1.pais_id = ectb6.tabela_id
+AND eii.embarque_id = eid.embarque_id
+--AND eie.conhec_id = eic.conhec_id
+--AND eic.moeda_id = ectb7.tabela_id
+--AND eic.via_transporte_id = ectb8.tabela_id
+AND eiil.ausencia_fabric = 3
+--AND eiil.pais_origem_id is null
+--AND eiil.fabric_site_id = eifs.fabric_site_id
+AND eiil.pais_origem_id = ectb5.tabela_id
+AND eco.codigo in('U42')
+--AND eii.invoice_num in('');
