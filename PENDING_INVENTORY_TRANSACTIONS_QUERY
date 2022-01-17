@@ -1,0 +1,103 @@
+SELECT msi.organization_id, segment1 "Item Number", inventory_item_id,
+       (SELECT SUM (moqd.primary_transaction_quantity)
+          FROM apps.mtl_onhand_quantities_detail moqd
+         WHERE msi.organization_id = moqd.organization_id
+           AND moqd.inventory_item_id = msi.inventory_item_id
+           AND moqd.subinventory_code <> 'IIP') "Item onhand",
+       (SELECT SUM (mr.primary_reservation_quantity)
+          FROM apps.mtl_reservations mr
+         WHERE mr.inventory_item_id = msi.inventory_item_id
+           AND mr.organization_id = msi.organization_id) "Reserved Qty",
+       (SELECT SUM (wsh.requested_quantity)
+          FROM apps.wsh_delivery_details wsh
+         WHERE wsh.inventory_item_id =
+                                      msi.inventory_item_id
+           AND wsh.organization_id = msi.organization_id
+           AND wsh.released_status IN ('S', 'Y')
+           AND wsh.source_code = 'OE') "Picked Quantity",
+       (SELECT SUM (moqd.primary_transaction_quantity)
+          FROM apps.mtl_onhand_quantities_detail moqd
+         WHERE msi.organization_id = moqd.organization_id
+           AND moqd.inventory_item_id = msi.inventory_item_id
+           AND moqd.subinventory_code = 'IIP') "IIP Onhand",
+       (SELECT SUM (ms.quantity)
+          FROM apps.mtl_supply ms
+         WHERE ms.item_id = msi.inventory_item_id
+           AND msi.organization_id = ms.to_organization_id
+           AND ms.supply_type_code = 'RECEIVING') "Receiving and pending qty",
+       (SELECT COUNT (line_number)
+          FROM
+               -- apps.oe_order_headers_all ooh,
+               apps.oe_order_lines_all oola
+         --    apps.org_organization_definitions ood
+        WHERE  1 = 1
+           --AND msi.organization_id = ood.organization_id
+            --AND ooh.org_id = ood.operating_unit
+            --AND ooh.header_id = oola.header_id
+            --AND msi.org_id = oola.org_id
+           AND oola.inventory_item_id = msi.inventory_item_id
+           AND oola.ship_from_org_id = msi.organization_id
+           AND oola.open_flag = 'Y'
+           AND return_reason_code IS NULL
+           AND oola.flow_status_code NOT IN
+                              ('CLOSED', 'CANCELLED', 'ENTERED', 'FULFILLED'))
+                                                          "Sales Order Count",
+             (SELECT COUNT (1)
+          FROM apps.mtl_material_transactions_temp mmtt
+         WHERE mmtt.organization_id =
+                                    msi.organization_id
+           AND mmtt.process_flag IN ('E')
+           AND mmtt.inventory_item_id = msi.inventory_item_id)
+                                                        "UNPROCESSED_MAT_TRX",
+       (SELECT   count(1)
+  FROM   apps.mtl_txn_request_lines mtrl,
+         apps.mtl_material_transactions_temp mmt
+WHERE       msi.inventory_item_id = mtrl.inventory_item_id
+         AND msi.organization_id = mtrl.organization_id
+         AND mp.organization_id  = msi.organization_id
+         AND mmt.transaction_status(+) = 2
+         AND mmt.process_flag(+) = 'Y'
+         AND mmt.move_order_line_id(+) = mtrl.line_id
+         AND mtrl.line_status = 7) "Allocated_MO_Not_trx",
+  (SELECT COUNT(1)
+  FROM apps.mtl_supply ms
+  WHERE ms.item_id = msi.inventory_item_id
+  AND (ms.to_organization_id = msi.organization_id
+  OR ms.from_organization_id = msi.organization_id)
+  AND ms.supply_type_code   IN ('SHIPMENT', 'RECEIVING')) pending_shipment,
+(SELECT  COUNT(1)
+FROM apps.mtl_cycle_count_entries_v mcc
+WHERE 1=1
+AND mcc.inventory_item_id  = msi.inventory_item_id
+AND mcc.organization_id  = msi.organization_id
+AND NVL (export_flag, 2) = 2
+AND entry_status_code IN (1,2, 3)
+AND entry_status_code!= NVL ('', -1)) Pending_cycle_count,
+           DECODE (msi.serial_number_control_code,
+                 '1', 'No Control',
+                 '2', 'Predefined',
+                 '5', 'At Receipt',
+                 '6', 'At Sales Order Issue',
+                 msi.serial_number_control_code)
+            "Serial control code",
+           DECODE (msi.lot_control_code,
+                 1, 'No Control',
+                 2, 'Full Control',
+                 msi.lot_control_code)
+            "Lot Control code",
+           DECODE (msi.planning_make_buy_code,
+                                '1','Make',
+                                '2','Buy') "Make_buy_code",
+         msi.item_type,(SELECT   flv.meaning
+                  FROM   apps.fnd_lookup_values flv
+                 WHERE       view_application_id = 3
+                         AND lookup_type = 'ITEM_TYPE'
+                         AND lookup_code = msi.item_type
+                         AND LANGUAGE = USERENV ('LANG')) msi_item_type,mp.organization_code,base_item_id
+             FROM apps.mtl_system_items_b msi,apps.mtl_parameters mp
+WHERE 1 = 1
+   AND mp.organization_id=msi.organization_id
+   AND ((msi.segment1='2097307-002' and mp.organization_code='DMG') or
+        (msi.segment1='414556-001' and mp.organization_code='DMG') or
+        (msi.segment1='M1024254' and mp.organization_code='DMG') or
+        (msi.segment1='2017003-001' and mp.organization_code='DMG'))
