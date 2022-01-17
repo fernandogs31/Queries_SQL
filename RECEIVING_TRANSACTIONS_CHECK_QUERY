@@ -1,0 +1,61 @@
+
+select ood.organization_code
+, msib.segment1 item
+, mtt.transaction_type_name
+, mmt.subinventory_code
+, mmt.transaction_date
+, rt.transaction_type
+, rt.quantity
+, rt.source_document_code
+, decode(rt.source_document_code,'REQ',(select segment1 
+                                          from apps.po_requisition_headers_all prh
+                                             , apps.po_requisition_lines_all prl
+                                         where prh.requisition_header_id = prl.requisition_header_id
+                                           and prl.requisition_line_id = rt.requisition_line_id
+                                        )
+                                ,'PO',(select segment1 
+                                          from apps.po_headers_all ph
+                                             , apps.po_lines_all pl
+                                             , apps.po_line_locations_all pll
+                                         where ph.po_header_id = pl.po_header_id
+                                           and pl.po_header_id = pll.po_header_id
+                                           and pl.po_line_id = pll.po_line_id
+                                           and pl.po_line_id = rt.po_line_id
+                                           and pll.po_header_id = rt.po_header_id
+                                           and pll.po_line_id = rt.po_line_id
+                                           and pll.line_location_id = rt.po_line_location_id
+                                      )) Document_
+from apps.mtl_material_transactions mmt
+, apps.org_organization_definitions ood
+, apps.mtl_transaction_types mtt
+, apps.rcv_transactions rt
+, apps.mtl_system_items_b msib
+where mmt.organization_id = ood.organization_id
+and mmt.transaction_type_id = mtt.transaction_type_id
+and mmt.rcv_transaction_Id = rt.transaction_Id
+and mmt.organization_id = msib.organization_id
+and mmt.inventory_item_id = msib.inventory_item_id
+and mmt.transaction_date >= '01-jun-2021'
+--and mmt.subinventory_code = 'CONF-N'
+--and ood.organization_code = 'DMG'
+and ood.operating_unit = '4330'
+and rt.source_document_code in ('PO','REQ')
+--group by ood.organization_code;
+
+/
+select *
+from apps.rcv_transactions
+where transaction_id = 388228364;
+
+/
+select segment1 
+
+from apps.po_headers_all ph
+                                             , apps.po_lines_all pl
+                                             , apps.po_line_locations_all pll
+where ph.po_header_id = pl.po_header_id
+                                           and pl.po_header_id = pll.po_header_id
+                                           and pl.po_line_id = pll.po_line_id
+                                           and pll.po_header_id = 47718852
+                                           and pll.po_line_id = 91114386
+                                           and pll.line_location_id = 156850417;
