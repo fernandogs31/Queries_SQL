@@ -1,0 +1,37 @@
+select distinct orl.ordered_item item_name, orh.order_number
+from SSOMIRVIEWS.GLP_OE_ORDER_LINES_ALL orl,
+SSOMIRVIEWS.GLP_OE_ORDER_HEADERS_ALL orh
+where orh.header_id = orl.header_id 
+and orl.ship_from_org_id in
+      (
+      select organization_id 
+       from SSOMIRVIEWS.glp_mtl_parameters where organization_code = 'ORG'  
+      )
+and orh.order_number in
+(
+'4933224'
+)
+union
+select distinct orl.item_number item_name, orl.order_number
+from SSOMIRVIEWS.eom_order_line orl,
+SSOMIRVIEWS.eom_order_header orh, 
+SSOMIRVIEWS.eom_fulfillment_set fset
+where orh.order_number = orl.order_number 
+and orl.order_number = fset.order_number
+and orh.operating_unit_id in 
+      (
+      select OU.operating_unit_id
+      from SSOODSVIEWS.ORG_MAIN_REL_A REL,
+      SSOODSVIEWS.ORG_MAIN_D_X ORG,
+      SSOODSVIEWS.ORG_OPERATING_UNIT_HIER1_D_V OU
+      where REL.rel_desc = 'OPERATING_UNIT-ORGANIZATION' 
+      and REL.child_org_idn=ORG.org_main_idn
+      and REL.parnt_org_idn=OU.operating_unit_idn
+      and REL.src_idn = 1 and ORG.org_key = 'ORG'  
+      )
+and orl.order_number in 
+(
+'4933224'
+)
+order by 1
+;
