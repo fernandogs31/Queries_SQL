@@ -1,0 +1,57 @@
+SELECT ief.excecao_id,
+       ief.tipo "Tipo Imposto exceção",
+       ctb2.descricao "Regime tributação",
+       ief.descricao "Exceção fiscal",
+       ief.aliquota "Aliquota %",
+       ief.inicio_vigencia "Data inicio vigência",
+       ief.fim_vigencia "Data fim vigência",
+       ief.data_inativacao "Data de inativação",
+       ctb.codigo "Tipo de ex-tarifario",
+       ief.nr_ato_legal "Nr. ato legal",
+       ctb1.codigo "Orgão emissor",
+       ief.ano_ato_legal "Ano ato legal",
+       iefl.sequencia "Sequência linhas",
+       decode(iefl.operacao,'I', 'INCLUSAO', 'E', 'EXCLUSAO') "forma linha",
+       decode(iefl.tipo_id, 104896, 'ITEM', 104895, 'NCM') "Tipo linha",
+       msi.segment1 "Item",
+       --iefl.faixa_de_codigo,
+       ctn.codigo "NCM"
+       
+FROM ecomex.imp_excecoes_fiscais ief,
+     ecomex.imp_excecoes_fiscais_lin iefl,
+     ecomex.imp_ex_tarifario iet,
+     apps.mtl_system_items_b msi,
+     ecomex.cmx_tab_ncm ctn,
+     ecomex.cmx_tabelas_b ctb,
+     ecomex.cmx_tabelas_b ctb1,
+     ecomex.cmx_tabelas_b ctb2
+
+WHERE ief.tipo = 'II'
+AND   ief.data_inativacao is null
+AND   ief.excecao_id = iefl.excecao_id
+AND   iefl.excecao_id = iet.ex_tarifario_id
+AND   iefl.tipo_id =  104896
+AND   iefl.faixa_de_id = msi.inventory_item_id
+AND   iet.ncm_id = ctn.ncm_id
+AND   ief.ato_legal_id = ctb.tabela_id
+AND   ief.orgao_emissor_id = ctb1.tabela_id
+AND   ief.regtrib_id = ctb2.tabela_id
+
+GROUP by ief.excecao_id,
+       ief.tipo,
+       ctb2.descricao,
+       ief.descricao,
+       ief.aliquota,
+       ief.inicio_vigencia,
+       ief.fim_vigencia,
+       ief.data_inativacao,
+       ctb.codigo,
+       ief.nr_ato_legal,
+       ctb1.codigo,
+       ief.ano_ato_legal,
+       iefl.sequencia,
+       iefl.operacao,
+       iefl.tipo_id,
+       msi.segment1,
+       --iefl.faixa_de_codigo,
+       ctn.codigo;
