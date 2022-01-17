@@ -1,0 +1,20 @@
+select distinct ood1.organization_code org_origem,
+ood2.organization_code org_destino, 
+oola.ordered_item part_number, 
+ooha.order_number SSO,
+oola.creation_date SSO_date
+
+from gems_ds_lines_all gdl,
+org_organization_definitions ood1,
+org_organization_definitions ood2,
+OE_ORDER_LINES_ALL oola,
+OE_ORDER_HEADERS_ALL ooha
+
+where 1=1
+and gdl.org_id = 4330
+and gdl.primary_source_entity_id = ood1.organization_id
+and gdl.organization_id = ood2.organization_id
+and gdl.creation_date between to_date('01/01/2018 00:00:00','dd/mm/yyyy hh24:mi:ss') and to_date('31/12/2020 00:00:00','dd/mm/yyyy hh24:mi:ss')
+and gdl.so_header_id = oola.header_id
+and oola.header_id = ooha.header_id
+and ood1.organization_code in('HEL','FRE','WXC','WXT');
