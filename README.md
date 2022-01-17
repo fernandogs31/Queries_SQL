@@ -1,2 +1,33 @@
 # Queries_SQL
 Queries SQL created 
+
+*** WMS_DATA_DISCOVER_QUERY ***
+
+SELECT 'NON CONF-N' -- SUBINVENTTORY NAME
+FROM
+  apps.po_headers_all pha,
+  apps.po_lines_all pla,
+  apps.rcv_transactions rt,
+  apps.wms_license_plate_numbers wlpn,
+  apps.wms_lpn_contents wpc,
+  org_organization_definitions ood
+WHERE 1=1
+AND pha.segment1                   in () -- PO NUMBER
+AND pha.po_header_id               = pla.po_header_id
+AND rt.po_header_id                = pha.po_header_id
+AND rt.transfer_lpn_id             = wlpn.lpn_id
+AND wlpn.lpn_id                    = mptdtv.lpn_id
+AND ood.organization_code          = '' -- INVENTORY ORGANIZATION
+AND WPC.PARENT_LPN_ID              = WLPN.LPN_ID
+AND wpc.inventory_item_id          = pla.item_id
+AND rownum                         = 1; 
+/ 
+SELECT inventory_location_id 
+FROM apps.mtl_item_locations_kfv
+WHERE subinventory_code = 'NON CONF-N' -- SUBINVENTORY NAME
+AND organization_id = base.organization_id
+AND segment1 = '001' -- LOCATION 1ST SEGMENT
+AND segment2 = '001' -- LOCATION 2ND SEGMENT
+AND segment3 = '001' -- LOCATION 3RD SEGMENT
+AND segment4 = 'NEW' -- LOCATION 4TH SEGMENT
+AND segment5 = 'BR'; -- LOCATION 5TH SEGMENT
