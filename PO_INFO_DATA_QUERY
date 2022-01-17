@@ -1,0 +1,159 @@
+SELECT DISTINCT mp.organization_code,
+                PHA.SEGMENT1          PO,
+                AP.VENDOR_NAME,
+                ASSA.VENDOR_SITE_CODE,
+                PLA.LINE_NUM,
+                msi.segment1          ITEM
+                -- ,PLA.ITEM_ID          
+               ,
+                PLA.ITEM_DESCRIPTION,
+                PLL.QUANTITY,
+                PLA.UNIT_PRICE,
+                PLL.QUANTITY_RECEIVED       QTDE_RECEBIDA,
+                PLL.QUANTITY_BILLED,
+                hl.LOCATION_CODE,
+                PLL.CLOSED_CODE,
+                PLA.TRANSACTION_REASON_CODE UTILIZACAO_FISCAL_PO,
+                GL.CONCATENATED_SEGMENTS,
+                PHA.CREATION_DATE,
+                FD.USER_NAME                SSO_REQUESTOR,
+                FD.DESCRIPTION              NOME,
+                PHA.LAST_UPDATE_DATE,
+                FD1.USER_NAME               ALTERADO_POR,
+		FD1.DESCRIPTION             NOME
+
+  FROM apps.PO_LINE_LOCATIONS_ALL    PLL,
+       apps.PO_HEADERS_ALL           PHA,
+       apps.PO_LINES_ALL             PLA,
+       apps.hr_locations_all         hl,
+       apps.ap_suppliers             ap,
+       apps.mtl_system_items         msi,
+       apps.mtl_parameters           mp,
+       apps.ap_supplier_sites_all    assa,
+       apps.gl_code_combinations_kfv gl,
+       apps.po_distributions_all     pda,
+       apps.fnd_user                 fd,
+       apps.fnd_user                 fd1
+
+WHERE PLL.PO_HEADER_ID = PHA.PO_HEADER_ID
+   AND PLL.PO_LINE_ID = PLA.PO_LINE_ID
+   and pla.po_header_id = pha.po_header_id
+   and pll.ship_to_location_id = hl.location_id
+   and ap.vendor_id = pha.vendor_id
+   and msi.inventory_item_id = pla.item_id
+   and mp.organization_id = hl.inventory_organization_id
+   and ap.vendor_id = assa.vendor_id
+   and pha.vendor_site_id = assa.vendor_site_id
+   and pda.code_combination_id = gl.code_combination_id
+   and pda.line_location_id = pll.line_location_id
+   and pha.created_by = fd.user_id (+)
+   and pha.last_updated_by = fd1.user_id (+)
+   --and pds.DELIVER_TO_PERSON_ID = fd.user_id (+)
+   and pha.authorization_status = 'APPROVED'
+   --and PLL.closed_code = 'OPEN'
+   -- and pha.currency_code = 'BRL'
+   -- and PLA.TRANSACTION_REASON_CODE is not null
+   --and mp.organization_code = 'PCN'
+   and pha.org_id = 4330
+   and pha.creation_date between  TO_date('&fromdate', 'dd/mm/yyyy') and  TO_date('&todate', 'dd/mm/yyyy')
+   --AND PHA.SEGMENT1 = '7140508.1'
+   --AND AP.VENDOR_NAME LIKE 'GUILHERM%'
+   --AND ASSA.GLOBAL_ATTRIBUTE9 = '1'
+ORDER BY 1, 2, 3;
+/
+SELECT ph.segment1 po_num, ph.creation_date, hou.NAME "Operating Unit",
+        ppx.full_name "Buyer Name", ph.type_lookup_code "PO Type",
+        plc.displayed_field "PO Status", ph.comments, pl.line_num,
+        plt.order_type_lookup_code "Line Type", msi.segment1 "Item Code",
+        pl.item_description, pl.unit_meas_lookup_code "UOM",
+        pl.base_unit_price, pl.unit_price, pl.quantity,
+        ood.organization_code "Shipment Org Code",
+        ood.organization_name "Shipment Org Name", pv.vendor_name supplier,
+        pvs.vendor_site_code, (pl.unit_price * pl.quantity) "Line Amount",
+        prh.segment1 req_num, prh.type_lookup_code req_method,
+        ppx1.full_name "Requisition requestor"
+   FROM po_headers_all ph,
+        po_lines_all pl,
+        po_distributions_all pda,
+        po_vendors pv,
+        po_vendor_sites_all pvs,
+        po_distributions_all pd,
+        po_req_distributions_all prd,
+        po_requisition_lines_all prl,
+        po_requisition_headers_all prh,
+        hr_operating_units hou,
+        per_people_x ppx,
+        mtl_system_items_b msi,
+        po_line_types_b plt,
+        org_organization_definitions ood,
+        per_people_x ppx1,
+        po_lookup_codes plc
+  WHERE 1 = 1
+    AND ph.
+
+vendor_id = pv.vendor_id
+    AND PH.ORG_ID=:P_ORG_ID
+    AND ph.po_header_id = pl.po_header_id
+    AND ph.vendor_site_id = pvs.vendor_site_id
+    AND ph.po_header_id = pd.po_header_id
+    AND pl.po_line_id = pd.po_line_id
+    AND pd.req_distribution_id = prd.distribution_id(+)
+    AND prd.requisition_line_id = prl.requisition_line_id(+)
+    AND prl.requisition_header_id = prh.requisition_header_id(+)
+    AND hou.organization_id = ph.org_id
+    AND ph.agent_id = ppx.person_id
+    AND pda.po_header_id = ph.po_header_id
+    AND pda.po_line_id = pl.po_line_id
+    AND pl.line_type_id = plt.line_type_id
+    AND ood.organization_id = pda.destination_organization_id
+    AND ppx1.person_id(+) = prh.preparer_id
+    AND pda.destination_organization_id = msi.organization_id(+)
+    AND msi.inventory_item_id = NVL (pl.item_id, msi.inventory_item_id)
+    AND plc.lookup_type = 'DOCUMENT STATE'
+    AND plc.lookup_code = ph.closed_code
+
+
+
+SELECT
+  poh.po_header_id, 
+  poh.type_lookup_code PO_TYPE,
+  poh.authorization_status PO_STATUS,
+  poh.segment1 PO_NUMBER,
+  pov.vendor_name SUPPLIER_NAME,
+  povs.vendor_site_code Location,
+  hrls.location_code Ship_To,
+  hrlb.location_code Bill_to,
+  pol.line_num ,
+  msib.segment1 Item,
+  pol.unit_price,
+  pol.quantity,
+  pod.amount_billed Amount,
+  pod.destination_subinventory,
+  ppf.full_name Buyer_Name,
+  poh.closed_Code 
+FROM
+  PO_HEADERS_ALL poh,
+  PO_LINES_ALL pol,
+  mtl_system_items_b msib,
+  PO_LINE_LOCATIONS_ALL poll,
+  PO_DISTRIBUTIONS_ALL pod,
+  po_vendors pov,
+  po_vendor_sites_All povs,
+  hr_locations_all hrls,
+  hr_locations_all hrlb,
+  per_all_people_f ppf,
+  po_line_types polt
+WHERE
+  1                         =1
+AND polt.line_type_id     = pol.line_type_id
+AND povs.vendor_site_id     = poh.vendor_site_id
+AND pov.vendor_id           = poh.vendor_id
+AND pol.item_id             = msib.inventory_item_id
+AND msib.organization_id    = 204
+AND poh.po_header_id        = pol.po_header_id
+AND pol.po_line_id          = pod.po_line_id
+AND poll.line_location_id   = pod.line_location_id
+AND poh.ship_to_location_id = hrls.location_id
+AND poh.bill_to_location_id = hrlb.location_id
+AND poh.agent_id            = ppf.person_id
+AND poh.segment1            = &LP1;
