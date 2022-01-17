@@ -1,0 +1,8 @@
+SELECT parent_table, reject_lookup_code, apir.creation_date
+
+FROM apps.ap_interface_rejections apir
+
+WHERE parent_table = 'AP_INVOICES_INTERFACE' AND parent_id IN
+(SELECT invoice_id 
+ FROM apps.ap_invoices_interface
+  WHERE invoice_num in ('82824'))
