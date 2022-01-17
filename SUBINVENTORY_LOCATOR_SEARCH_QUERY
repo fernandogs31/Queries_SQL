@@ -1,0 +1,15 @@
+SELECT
+      MIL.segment1 "Org",
+      MIL.subinventory_code "Sub-inventory",
+      MIL.segment2,
+      MIL.segment3,
+      MIL.segment4,
+      MIL.segment5,
+      MSI.description "Description",
+      MSI.disable_date "Inactive_Date"
+FROM
+     mtl_secondary_inventories MSI,
+     mtl_item_locations MIL
+WHERE
+    MIL.organization_id = 2090
+AND MIL.subinventory_code = MSI.secondary_inventory_name;
