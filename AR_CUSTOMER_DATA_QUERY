@@ -1,0 +1,45 @@
+SELECT 
+  hp.party_id,                     ----Customer Information----
+  hp.party_name "CUSTOMER_NAME",
+  hca.cust_account_id,
+  hca.account_number,
+  hcas.org_id,
+  haou.name "ORG_NAME",
+  hcas.cust_acct_site_id,         ----Customer Site Information----
+  hps.party_site_number,
+  hcsu.site_use_code,
+  hl.address1,                    ----Customer Site Address----
+  hl.address2,
+  hl.address3,
+  hl.address4,
+  hl.city,
+  hl.postal_code,
+  hl.state,
+  hl.province,
+  hl.county,
+  hl.country,
+  hl.address_style
+  
+FROM 
+  hz_parties hp,
+  hz_party_sites hps,
+  hz_cust_accounts_all hca,
+  hz_cust_acct_sites_all hcas,
+  hz_cust_site_uses_all hcsu,
+  hz_locations hl,
+  hr_all_organization_units haou
+  
+WHERE 
+1=1
+AND hp.party_id            = hca.party_id
+AND hca.cust_account_id    = hcas.cust_account_id(+)
+AND hps.party_site_id(+)   = hcas.party_site_id
+AND hcas.cust_acct_site_id = hcsu.cust_acct_site_id
+AND hps.location_id = hl.location_id(+)
+AND hcas.org_id = haou.organization_id
+--AND hp.party_type = 'ORGANIZATION' -- only ORGANIZATION Party types
+AND hp.status     = 'A'            -- only Active Parties/Customers
+
+ORDER BY to_number(hp.party_number),
+  hp.party_name,
+  hca.account_number;
