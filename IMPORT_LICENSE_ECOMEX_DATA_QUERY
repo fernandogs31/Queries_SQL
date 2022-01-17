@@ -1,0 +1,66 @@
+SELECT DISTINCT
+DECODE(eil.empresa_id,100010,'BONDED SAO PAULO',
+                      100009,'CONTAGEM',
+                      100012,'RECIFE',
+                      100013,'ITAJAI',
+                      100014,'SAO PAULO',
+                      100015,'MDI ITAPEVI',
+                      100016,'DIV ITAPEVI') "EMPRESA",
+eie.embarque_num,
+eie.embarque_ano,
+eil.referencia,
+eil.nr_registro,
+eil.dt_registro,
+eie1.nome "EXPORTADOR",
+eies1.codigo " EXPORTADOR SITE",
+ectb1.codigo "URFE",
+ectb2.codigo "URFD",
+ectb3.codigo "INCOTERM",
+eil.creation_date,
+esu.nm_usuario "USUARIO",
+ell.linha_num,
+msi.segment1 "ITEM",
+ectb4.codigo "UM",
+ell.qtde,
+ell.preco_unitario_m,
+ectn.codigo "NCM",
+ell.ausencia_fabric,
+eif.nome "FABRICANTE",
+eifs.codigo "SITE"
+--ell.pais_origem_id
+
+FROM
+ecomex.imp_licencas eil,
+ecomex.imp_embarques eie,
+ecomex.imp_entidades eie1,
+ecomex.imp_entidades_sites eies1,
+ecomex.cmx_tabelas_b ectb1,
+ecomex.cmx_tabelas_b ectb2,
+ecomex.cmx_tabelas_b ectb3,
+ecomex.sen_usuarios esu,
+ecomex.imp_licencas_lin ell,
+apps.mtl_system_items_b msi,
+ecomex.cmx_tabelas_b ectb4,
+ecomex.cmx_tab_ncm ectn,
+ecomex.imp_fabricantes eif,
+ecomex.imp_fabricantes_sites eifs
+--ecomex.cmx_tabelas_b ectb
+
+WHERE 1 = 1
+AND eil.creation_date between '01/06/21' and '30/06/21'
+AND eil.embarque_id = eie.embarque_id
+AND eil.export_id = eie1.entidade_id
+AND eil.export_site_id = eies1.entidade_site_id
+AND eil.urfe_id = ectb1.tabela_id
+AND eil.urfd_id = ectb2.tabela_id
+AND eil.incoterm_id = ectb3.tabela_id
+AND eil.created_by = esu.id
+AND eil.licenca_id = ell.licenca_id
+AND ell.item_id = msi.inventory_item_id
+AND ell.un_medida_id = ectb4.tabela_id
+AND ell.class_fiscal_id = ectn.ncm_id
+--OR  (ell.ausencia_fabric <> 1
+AND eil.fabric_id = eif.fabric_id
+--OR  eil.fabric_id is NULL)
+AND eil.fabric_site_id = eifs.fabric_site_id
+--AND eil.pais_origem_id = ectb.tabela_id);
