@@ -1,0 +1,5 @@
+SELECT * 
+FROM OE_ORDER_LINES_V 
+Where org_id = '4330' 
+AND ordered_item = 'D3162T' 
+AND actual_fulfillment_date >= '10-Feb-2020'
