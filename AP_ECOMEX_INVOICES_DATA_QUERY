@@ -1,0 +1,30 @@
+SELECT DISTINCT apa.invoice_num "NF AP" 
+       , pha.SEGMENT1 "PO Brazil"
+       , ooha.order_number "SSO"
+       , rcta.trx_number "NF Afiliada"
+       , ood.organization_code
+       , haou.name "Source from LE"
+  FROM apps.ap_invoices_all apa
+       , apps.ap_invoice_lines_all apla
+       , apps.po_headers_all pha
+       , apps.gems_ds_lines_all  gdsla
+       , apps.oe_order_headers_all ooha
+       , apps.ra_customer_trx_all rcta
+       , apps.org_organization_definitions ood
+       , apps.hr_all_organization_units haou       
+  WHERE apa.invoice_id = apla.invoice_id
+    AND apla.po_header_id = pha.po_header_id
+    AND gdsla.po_header_id = pha.po_header_id
+    AND gdsla.so_header_id = ooha.header_id
+    AND rcta.ct_reference = to_char(ooha.order_number)
+    AND ood.organization_id = gdsla.organization_id
+    AND gdsla.source_entity_id = haou.organization_id
+    AND apa.org_id = 4330
+    --AND apa.invoice_num = '7121374'
+     AND apa.invoice_date BETWEEN TO_DATE('01/01/2021','dd/mm/yyyy') AND TO_DATE('10/03/2021','dd/mm/yyyy')
+    --AND EXISTS (  SELECT 1 
+   --FROM ECOMEX.IMP_INVOICES 
+  --WHERE EXISTS ( SELECT 1 FROM  ECOMEX.IMP_INVOICES_LIN IILR WHERE iilr.po_id = pha.po_header_id  )
+     --OR EXISTS ( SELECT 1
+                  --FROM ECOMEX.IMP_INVOICES_LIN_DET COM_D
+                 --WHERE com_d.po_id = pha.po_header_id ))
