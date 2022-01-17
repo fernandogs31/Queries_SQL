@@ -1,0 +1,74 @@
+select mp.organization_code "Organização",
+       ceo.operation_id ri,
+       ceo.receive_date "Data Recebida",
+       to_char(ci.invoice_num) "NF Entrada",
+    /*   (select rcta.trx_number
+          from ar.ra_customer_trx_lines_all rctla,
+               ar.ra_customer_trx_all       rcta
+         where to_char(ci.operation_id) =
+               to_char(rctla.INTERFACE_LINE_ATTRIBUTE1)
+           and mp.organization_code = rctla.INTERFACE_LINE_ATTRIBUTE2
+           and to_char(ci.invoice_num) =
+               to_char(rctla.INTERFACE_LINE_ATTRIBUTE3)
+           and to_char(cil.invoice_line_id) =
+               to_char(rctla.INTERFACE_LINE_ATTRIBUTE4)
+           and rctla.INTERFACE_LINE_CONTEXT = 'GEOG BR 1645 INTEGRATED RCV'
+           and rctla.org_id = 11565
+           and rctla.customer_trx_id = rcta.customer_trx_id) "NF Armazenamento",*/
+       aas.vendor_name "Fornecedor",
+       pha.segment1 PO,
+       pla.line_num "Linha da PO",
+       msi.segment1 "Item",
+       msi.description "Descrição do item",
+       cil.quantity "Quantidade",
+       cil.uom "UOM",
+      /* ppa.segment1 "Projeto",
+       pt.task_number "Tarefa",*/
+       NULL "Job",
+       NULL "Operação",
+       NULL "Assembly",
+       NULL "Descrição do Assembly"
+  from cll.cll_f189_entry_operations ceo,
+       cll.cll_f189_invoices         ci,
+       cll.cll_f189_invoice_lines    cil,
+       po.po_headers_all             pha,
+       po.po_lines_all               pla,
+       po.po_line_locations_all      plla,
+       po.po_distributions_all       pda,
+       inv.mtl_system_items_b        msi,
+       inv.mtl_parameters            mp,
+     --  apps.fnd_lookup_values        flv,
+       hr.hr_locations_all           hla,
+       ap.ap_suppliers               aas/*,
+       pa.pa_projects_all            ppa,
+       pa.pa_tasks                   pt*/
+       
+where mp.organization_id = ceo.organization_id
+   and ceo.operation_id = ci.operation_id
+   and ceo.organization_id = ci.organization_id
+   and ci.invoice_id = cil.invoice_id
+   and ci.location_id = hla.location_id
+  -- and hla.location_code = flv.meaning
+   /*and flv.lookup_type = 'GEOG_1645_THIRD_PARTIES'
+   and flv.language = 'US'*/
+   and cil.line_location_id = plla.line_location_id
+   and plla.po_line_id = pla.po_line_id
+   and plla.line_location_id = pda.line_location_id
+   and plla.po_header_id = pha.po_header_id
+   and pha.vendor_id = aas.vendor_id
+   and pda.DESTINATION_TYPE_CODE <> 'SHOP FLOOR'
+  -- and pda.project_id = ppa.project_id(+)
+  -- and pda.task_id = pt.task_id(+)
+   and cil.organization_id = msi.organization_id
+   and cil.item_id = msi.inventory_item_id
+   and ceo.status = 'COMPLETE'
+   and ceo.reversion_flag is null
+   and mp.organization_code = '&orgcode'
+  -- AND    ceo.operation_id = 2575
+   and not exists
+(select 1
+          from po.rcv_transactions rt, po.rcv_shipment_lines rsl
+         where cil.shipment_header_id = rt.shipment_header_id
+           and plla.line_location_id = rt.po_line_location_id
+           and cil.item_id = rsl.item_id
+           and rt.transaction_type = 'DELIVER');
