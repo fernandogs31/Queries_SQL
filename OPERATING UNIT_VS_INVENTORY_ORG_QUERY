@@ -1,0 +1,16 @@
+SELECT hou.NAME operating_unit_name,
+hou.short_code,
+hou.organization_id operating_unit_id, 
+hou.set_of_books_id,
+hou.business_group_id,
+ood.organization_name inventory_organization_name,
+ood.organization_code Inv_organization_code,
+ood.organization_id Inv_organization_id, 
+ood.chart_of_accounts_id
+
+FROM hr_operating_units hou, 
+org_organization_definitions ood
+
+WHERE 1 = 1 
+AND hou.organization_id = ood.operating_unit
+ORDER BY hou.organization_id ASC
