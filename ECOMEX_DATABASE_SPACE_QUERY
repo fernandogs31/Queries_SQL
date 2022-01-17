@@ -1,0 +1,11 @@
+SELECT nome, data
+FROM CMX_EVENTOS
+order by data,nome
+/
+SELECT (sample_size / 1024 / 1024) GB, (sample_size / 1024) MB
+FROM SYS.all_tables
+WHERE table_name = 'CMX_EVENTOS';
+/
+SELECT (sample_size / 1024 / 1024) GB, (sample_size / 1024) MB
+FROM SYS.all_tables
+WHERE table_name = 'CMX_LOG_ERROS';
