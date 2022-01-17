@@ -1,0 +1,17 @@
+SELECT invoice_num, 
+       invoice_date, 
+       process_flag, 
+       (select organization_code
+        from apps.mtl_parameters mtp
+        where organization_id = cfi.organization_id) org_code, 
+       cfi.organization_id, 
+       cie.interface_operation_id, 
+       cie.interface_invoice_id, 
+       cie.error_code, cie.error_message, 
+       cie.source
+       
+FROM  apps.cll_f189_interface_errors cie, 
+      apps.cll_f189_invoices_interface cfi
+      
+WHERE cie.interface_invoice_id = cfi.interface_invoice_id
+AND   process_flag <> 6;
