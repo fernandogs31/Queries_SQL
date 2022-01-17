@@ -1,0 +1,40 @@
+SELECT trp_cur_mmicv
+      FROM apps.gems_tran_price_tb
+     WHERE trp_item_num_pf = '5826495'-- pc_item_cod  --item
+       AND trp_dest_pf IN ('000000', '999999', '0000', '9999', '' )-- Aqui coloca o numero da organização
+       AND trp_cur_tran_price IS NOT NULL
+       AND ROWNUM = 1;  
+apps.gems_tran_price_tb
+
+Regra para gerar invoice automática pela Auto Invoice - O que o sistema faz:
+
+--Pega o tipo do item:
+    SELECT item_type
+      FROM mtl_system_items_b
+     WHERE inventory_item_id = pn_item_id
+       AND organization_id   = pn_organizacao_id;
+
+--Confere se o item tem FMI:
+    SELECT 1
+      FROM fnd_flex_value_sets a
+         , fnd_flex_values_vl b
+     WHERE a.flex_value_set_name = 'GPO_ZERO_TP_ITEM_TYPE'
+       AND a.flex_value_set_id = b.flex_value_set_id
+       AND b.flex_value = pc_item_type;
+
+--Se encontrou registro na query anterior, busca o company code do line_location_id:
+    SELECT gcc.segment1 dest_company_code
+      FROM mtl_parameters mp
+         , gl_code_combinations gcc
+         , po_line_locations_all pll
+     WHERE mp.cost_of_sales_account = gcc.code_combination_id
+       AND mp.organization_id = pll.ship_to_organization_id
+       AND pll.line_location_id = pn_line_location_id;
+
+--Busca o preço pelo company code e código do item:
+    SELECT trp_cur_mmicv
+      FROM gems_tran_price_tb
+     WHERE trp_item_num_pf = pc_item_cod
+       AND trp_dest_pf IN ('000000', '999999', '0000', '9999', pc_company_code )
+       AND trp_cur_tran_price IS NOT NULL
+       AND ROWNUM = 1;
