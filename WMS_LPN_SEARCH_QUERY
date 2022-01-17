@@ -1,0 +1,114 @@
+-- Query LPN unload
+
+select * from apps.wms_op_plan_instances
+where source_task_id in (
+select parent_line_id from apps.mtl_material_transactions_temp
+where  lpn_id = 45483236
+or transfer_lpn_id = 45483236
+or content_lpn_id = 45483236
+union
+select transaction_temp_id from apps.mtl_material_transactions_temp
+where  lpn_id = 45483236
+or transfer_lpn_id = 45483236
+or content_lpn_id = 45483236); --delete
+/
+select * from apps.wms_op_operation_instances
+where source_task_id in (
+select transaction_temp_id from apps.mtl_material_transactions_temp
+where  lpn_id =45483236or transfer_lpn_id = 45483236
+or content_lpn_id = 45483236
+union
+select parent_line_id from apps.mtl_material_transactions_temp
+where  lpn_id = 45483236
+or transfer_lpn_id = 45483236
+or content_lpn_id = 45483236); --delete
+/
+select * from apps.wms_dispatched_tasks where 
+transaction_temp_id in (select transaction_temp_id from apps.mtl_material_transactions_temp
+where lpn_id =45483236
+or transfer_lpn_id = 45483236
+or content_lpn_id = 45483236
+union
+select parent_line_id from apps.mtl_material_transactions_temp
+where  lpn_id = 45483236
+or transfer_lpn_id = 45483236
+or content_lpn_id = 45483236); --delete
+/
+select * from apps.mtl_transaction_lots_temp
+where transaction_temp_id in (select transaction_temp_id from
+apps.mtl_material_transactions_temp where lpn_id =45483236
+or transfer_lpn_id = 45483236
+or content_lpn_id = 45483236); --delete
+/
+select * from  apps.mtl_material_transactions_temp
+where transaction_temp_id in 
+(select parent_line_id from apps.mtl_material_transactions_temp
+where lpn_id =45483236or transfer_lpn_id = 45483236
+or content_lpn_id = 45483236); --delete
+/
+select * 
+from apps.mtl_material_transactions_temp
+where lpn_id =45483236
+or transfer_lpn_id = 45483236
+or content_lpn_id = 45483236; -- delete
+/
+select * 
+from apps.mtl_transaction_lots_interface
+where lot_number in (select lot_number
+from apps.wms_lpn_contents where parent_lpn_id = 45483236);
+/
+select * 
+from apps.rcv_lots_interface
+where interface_transaction_id in (select interface_transaction_id
+from apps.rcv_transactions_interface
+where lpn_id = 45483236
+or transfer_lpn_id = 45483236);
+/
+select * 
+from apps.rcv_transactions_interface
+where lpn_id = 45483236 
+or transfer_lpn_id = 45483236;
+/
+select quantity_detailed --null
+      ,wms_process_flag -- 1
+from apps.mtl_txn_request_lines
+WHERE lpn_id = 45483236
+and line_status=7;
+/
+select source_header_id --null
+  , source_name --null
+from apps.wms_lpn_contents
+where parent_lpn_id = 45483236;
+
+
+-- Verificar todas as regras ativas em uma org.
+select m.organization_code
+      ,w.type_meaning "Type"
+      ,w.name "Name"
+      ,w.DESCRIPTION "Description"
+      ,w.ACTIVITY_TYPE_NAME "Activity"
+      ,w.PLAN_TYPE_NAME "Plan Type"
+      ,w.QTY_F_OBJECT_NAME||'|'||w.QTY_F_PARAMETER_NAME "Quantity Function"
+      --,w.QTY_F_PARAMETER_NAME "Quantity Function"
+      ,w.ALLOCATION_MODE "Allocation Mode"
+      ,decode(w.USER_DEFINED_FLAG,'Y','Yes','N','No',Null) "User Defined"
+      ,decode(w.ENABLED_FLAG,'Y','Yes','N','No',Null) "Enabled"
+      ,decode(w.COMMON_TO_ALL_ORGS_FLAG,'Y','Yes','N','No',Null) "Common to All Orgs"
+      ,w.RULE_WEIGHT "Weight"
+      ,w1.sequence_number seq
+      ,w1.logical_operator_meaning "And/or"
+      ,w1.BRACKET_OPEN "("
+      ,w1.LEFT_OBJECT_NAME object
+      ,w1.LEFT_PARAMETER_NAME parameter
+      ,w1.OPERATOR_MEANING operator
+      ,w1.RIGHT_OBJECT_NAME object2
+      ,w1.RIGHT_PARAMETER_NAME "Parameter/Value/LOV"
+      ,w1.operand_expression value
+      ,w1.BRACKET_CLOSE ")"
+from apps.WMS_RULES_V    w
+    ,apps.WMS_RESTRICTIONS_V w1
+    ,apps.mtl_parameters m
+where m.organization_id(+) = w.organization_id
+  and w.rule_id = w1.rule_id
+  and m.organization_code in ('DMG')
+order by 1,2,3,13; 
