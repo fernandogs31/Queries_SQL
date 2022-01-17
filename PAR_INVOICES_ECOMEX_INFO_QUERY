@@ -1,0 +1,6 @@
+SELECT distinct ii.invoice_num, iil.atributo3
+FROM imp_invoices II,
+imp_invoices_lin IIL
+WHERE ii.invoice_id = iil.invoice_id
+AND iil.atributo3 = 'AHC210941001'	
+--AND ii.dt_emissao >= '01/01/2021';
