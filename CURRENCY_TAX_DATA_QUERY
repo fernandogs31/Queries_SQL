@@ -1,0 +1,15 @@
+SELECT rat.RATE_SOURCE_CODE
+,      rat.CONVERSION_DATE
+,      typ.user_conversion_type "User Conversion Type"
+,      rat.from_currency        "From Currency"
+,      rat.to_currency          "To Currency"
+,      rat.CONVERSION_RATE      "Exchange Rate"
+
+FROM   apps.gl_daily_conversion_types typ
+,      apps.gl_daily_rates            rat
+
+WHERE  rat.conversion_type = typ.conversion_type
+AND    rat.from_currency in ('USD','EUR','MXN')
+AND    rat.to_currency = 'BRL'
+AND    rat.conversion_date between '23-oct-2020' and '31-oct-2020'
+AND    typ.user_conversion_type = 'Brazil Daily';
