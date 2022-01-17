@@ -1,0 +1,56 @@
+SELECT   rct.trx_number invoice_number,
+                                       -- ARPS.AMOUNT_DUE_ORIGINAL BALANCE,
+                                       arps.amount_due_remaining balance,
+         hp.party_name bill_to_customer,
+         DECODE (rctt.TYPE,
+                 'CB', 'Chargeback',
+                 'CM', 'Credit Memo',
+                 'DM', 'Debit Memo',
+                 'DEP', 'Deposit',
+                 'GUAR', 'Guarantee',
+                 'INV', 'Invoice',
+                 'PMT', 'Receipt',
+                 'Invoice'
+                ) invoice_class,
+         rct.invoice_currency_code currency, rct.trx_date inv_date,
+         rctd.gl_date gl_date, (SELECT NAME
+                                  FROM apps.ra_terms rat
+                                 WHERE rat.term_id = rct.term_id) terms,
+         rctt.NAME order_type,
+         rctl.SALES_ORDER
+        FROM ra_customer_trx_all rct,
+         RA_CUSTOMER_TRX_LINES_ALL      RCTL,
+         ra_cust_trx_line_gl_dist_all rctd,
+         hz_parties hp,
+         hz_cust_accounts_all hca,
+         ra_cust_trx_types_all rctt,
+         hr_operating_units hou,
+         ar_payment_schedules_all arps
+   WHERE rct.customer_trx_id = rctd.customer_trx_id
+AND RCT.CUSTOMER_TRX_ID       = RCTL.CUSTOMER_TRX_ID
+AND RCTL.CUSTOMER_TRX_LINE_ID = RCTD.CUSTOMER_TRX_LINE_ID
+     AND rct.bill_to_customer_id = hca.cust_account_id
+     AND hp.party_id = hca.party_id
+     AND rct.cust_trx_type_id = rctt.cust_trx_type_id
+     AND rct.org_id = rctt.org_id
+     AND rct.org_id = hou.organization_id
+     AND arps.customer_trx_id(+) = rct.customer_trx_id
+     AND rct.org_id = NVL (:p_org_id, rct.org_id)
+     AND rct.trx_number = NVL (:trx_number, rct.trx_number)-- KAL/2017/DE/1114
+     AND rct.trx_date BETWEEN NVL (:p_trx_date_from, rct.trx_date)
+                          AND NVL (:p_trx_date_to, rct.trx_date)
+     AND rctd.gl_date BETWEEN NVL (:p_gl_date_from, rctd.gl_date)
+                          AND NVL (:p_gl_date_to, rctd.gl_date)
+     AND hp.party_name = NVL (:p_cust_name, hp.party_name)
+     AND NVL (rct.ct_reference, 'XX') = NVL (NVL (:p_sales_order_no, rct.ct_reference), 'XX')
+GROUP BY rct.trx_number,
+         -- ARPS.AMOUNT_DUE_ORIGINAL,
+         arps.amount_due_remaining,
+         hp.party_name,
+         rctt.TYPE,
+         rct.invoice_currency_code,
+         rct.trx_date,
+         rctd.gl_date,
+         rct.term_id,
+         rctt.NAME,
+         rctl.SALES_ORDER;
