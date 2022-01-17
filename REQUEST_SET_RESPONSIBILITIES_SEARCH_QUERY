@@ -1,0 +1,16 @@
+SELECT DISTINCT frt.responsibility_name,
+                frg.request_group_name,
+                frsv.user_request_set_name,
+                frsv.request_set_name
+
+FROM            apps.fnd_responsibility fr,
+                apps.fnd_responsibility_tl frt,
+                apps.fnd_request_groups frg,
+                apps.fnd_request_group_units frgu,
+                apps.fnd_request_sets_vl frsv
+
+WHERE fr.request_group_id = frg.request_group_id
+AND fr.responsibility_id = frt.responsibility_id
+AND frg.request_group_id = frgu.request_group_id
+AND frgu.request_unit_id = frsv.request_set_id
+AND frsv.request_set_name= :P_REQUEST_SET_NAME;
