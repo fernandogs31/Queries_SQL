@@ -1,0 +1,20 @@
+select pv.vendor_name
+, cfe.vendor_site_id
+, pvs.vendor_site_code
+, ood.organization_code
+, ood.organization_name
+--, pvs.*
+
+from apps.cll_f189_fiscal_entities_all cfe
+, apps.po_vendors pv
+, apps.po_vendor_sites_all pvs
+, apps.org_organization_definitions ood
+
+where cfe.organization_Id = ood.organization_Id(+)
+and cfe.vendor_site_id = pvs.vendor_site_id
+and pvs.vendor_id = pv.vendor_id
+--and pv.vendor_name = 'TEKTRONIX SERVICE SOLUTIONS'
+--and  ood.organization_Id = 309
+--and pvs.vendor_site_id in (804500,2364393)
+
+order by pv.vendor_name;
