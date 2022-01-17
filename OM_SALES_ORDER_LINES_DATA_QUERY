@@ -3,3 +3,23 @@ FROM OE_ORDER_LINES_V
 Where org_id = '4330' 
 AND ordered_item = 'D3162T' 
 AND actual_fulfillment_date >= '10-Feb-2020'
+/
+SELECT *
+FROM apps.oe_order_lines_all
+WHERE org_id = '4330'
+AND creation_date between '01-01-20' and '01/12/21'
+--AND flow_status_code in ('closed', 'fulfilled')
+AND ordered_item in ('NI_BMD_CONSTRUCTION',
+'NI_CT_CONSTRUCTION',
+'NI_IIS_CONSTRUCTION',
+'NI_IT_CONSTRUCTION',
+'NI_MM_CONSTRUCTION',
+'NI_MR_CONSTRUCTION',
+'NI_NUC_CONSTRUCTION',
+'NI_OTH_CONSTRUCTION',
+'NI_PET_CONSTRUCTION',
+'NI_RAD_CONSTRUCTION',
+'NI_RF_CONSTRUCTION',
+'NI_SRG_CONSTRUCTION',
+'NI_US_CONSTRUCTION',
+'NI_VAS_CONSTRUCTION');
