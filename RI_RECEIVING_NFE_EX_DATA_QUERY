@@ -1,0 +1,28 @@
+select  
+       pv.vendor_name,
+       PV.vendor_site_code,
+       pv.state_code,
+       apt.name Supplier_TERMS,
+       decode(clle.cust_acct_site_id, NULL, 'Não existe cliente associado','Existe cliente associado')"SITE CLIENTE",
+       count(*)
+
+from  APPS.CLL_F189_INVOICES clli,
+      APPS.CLL_F189_VENDORS_V pv,
+      apps.AP_TERMS APT,
+       APPS.CLL_F189_FISCAL_ENTITIES_ALL CLLE
+      
+where 1 = 1
+and clli.entity_id = pv.entity_id
+and clli.creation_date >= '01-JAN-2018'
+and pv.state_code = 'EX'
+and pv.terms_id = apt.term_id
+and pv.entity_id = clle.entity_id(+)
+
+group by          
+       pv.vendor_name,
+       PV.vendor_site_code,
+       pv.state_code,
+       apt.name,
+       clle.cust_acct_site_id
+
+order by 5 desc
