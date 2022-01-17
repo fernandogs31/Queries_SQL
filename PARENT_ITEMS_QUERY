@@ -1,0 +1,59 @@
+-- Get all the parents
+select distinct part.prd_nbr_key item_name, 
+part.prd_item_typ item_type,
+part.prd_stat item_state,
+part.long_desc item_description,
+--part2.amer_stats_cd americas_status,
+--aux.global_attribute2,
+commercial.modlty_cd modality, 
+commercial.modlty_desc modality_description,
+part.orgntd_dt originated_date,
+aux.glprod_item_status,
+aux.glprod_item_type,
+mwsorg.pdm_templt mws_template,
+common_bom.common_bom_org, 
+common_bom.common_bom_assembly
+from SSOODSVIEWS.PRD_REVSN_D_X part
+left join SSOODSVIEWS.PRD_MAIN_D_X commercial on commercial.prd_nbr_key=part.prd_nbr_key AND commercial.dat_orgn='PDMCOG_COMMERCIAL_ITEMS'
+left join 
+	(
+	select msib.segment1, msib.inventory_item_status_code glprod_item_status,
+	msib.organization_id, msib.inventory_item_id, msib.global_attribute2,
+	msib.item_type glprod_item_type, mp.organization_code
+	from SSOMIRVIEWS.glp_mtl_system_items_b msib, 
+	SSOMIRVIEWS.glp_mtl_parameters mp 
+	where msib.organization_id = mp.organization_id AND mp.organization_code='ORG'
+	) aux
+	on aux.segment1=part.prd_nbr_key
+left join SSOODSVIEWS.PRD_OMA_MFR_D_X mwsorg on mwsorg.prd_revsn_idn=part.prd_revsn_idn and mwsorg.org_cd = 'ORG' 
+left join 
+	(
+	select mp.organization_code     common_bom_org,
+	msib_common.segment1    		common_bom_assembly,
+	bill.asmbly_org_id, 
+	bill.asmbly_item_id
+	from SSOMIRVIEWS.glp_mtl_parameters 	mp,
+	SSOMIRVIEWS.glp_mtl_system_items_b		msib_common,
+	    (
+	    select comn_org_id, comn_asmbly_item_id,
+	    asmbly_org_id, asmbly_item_id
+	    from SSOODSVIEWS.BOM_BIL_OF_MTL_F_X 
+	    where asmbly_org_id in 
+	    	(select organization_id 
+	    	from SSOMIRVIEWS.glp_mtl_parameters 
+	    	where organization_code = 'ORG'
+	    	)
+		) bill
+	where mp.organization_id = bill.comn_org_id and msib_common.organization_id = bill.comn_org_id
+	and msib_common.inventory_item_id = bill.comn_asmbly_item_id
+	) common_bom
+	on aux.organization_id = common_bom.asmbly_org_id and aux.inventory_item_id = common_bom.asmbly_item_id
+where 
+part.prd_item_typ in ('Parent Catalog','Offering Collector','ATO Option Class','ATO Model','PTO Option Class','PTO Model','Kit')
+and 
+part.curnt_revsn_flg='Y' and part.prd_stat not in ('Obsolete')
+and part.prd_item_typ not in ('Documentation Item','Product Configuration Master')
+and part.prd_nbr_key in (
+'B77121BK'
+)
+order by item_name; 
