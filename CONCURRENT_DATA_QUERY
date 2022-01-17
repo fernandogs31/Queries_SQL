@@ -1,0 +1,62 @@
+SELECT r.ROWID row_id,
+        r.request_id,
+        r.phase_code,
+        r.status_code,
+        r.priority_request_id,
+        r.priority,
+        r.request_date,
+        r.requested_by,
+        r.requested_start_date,
+        r.hold_flag,
+        r.has_sub_request,
+        r.is_sub_request,
+        r.update_protected,
+        r.queue_method_code,
+        r.responsibility_application_id,
+        r.responsibility_id,
+        r.save_output_flag,
+        r.last_update_date,
+        r.last_updated_by,
+        r.last_update_login,
+        r.printer,
+        r.print_style,
+        r.parent_request_id,
+        r.controlling_manager,
+        r.actual_start_date,
+        r.actual_completion_date,
+        r.completion_text,
+        r.argument_text,
+        r.implicit_code,
+        r.request_type,
+        r.program_application_id,
+        r.concurrent_program_id,
+        pb.concurrent_program_name program_short_name,
+        pb.execution_method_code,
+        pb.enabled_flag enabled,
+        DECODE(r.description,
+               NULL,
+               pt.user_concurrent_program_name,
+               r.description || ' (' || pt.user_concurrent_program_name || ')') program,
+        pb.printer_name fcp_printer,
+        pb.output_print_style fcp_print_style,
+        pb.required_style fcp_required_style,
+        u.user_name requestor,
+        s.user_printer_style_name user_print_style,
+        r.description description,
+        pt.user_concurrent_program_name user_concurrent_program_name
+        
+   FROM  apps.fnd_concurrent_programs_tl pt,
+         apps.fnd_concurrent_programs    pb,
+         apps.fnd_user                   u,
+         apps.fnd_printer_styles_tl      s,
+        apps.fnd_concurrent_requests    r
+        
+  WHERE pb.application_id = r.program_application_id
+    AND pb.concurrent_program_id = r.concurrent_program_id
+    AND pb.application_id = pt.application_id
+    AND pb.concurrent_program_id = pt.concurrent_program_id
+    AND pt.LANGUAGE = USERENV('LANG')
+    AND u.user_id = r.requested_by
+    AND s.printer_style_name(+) = r.print_style
+    AND r.request_id = 1171828227
+    AND s.LANGUAGE(+) = USERENV('LANG')
