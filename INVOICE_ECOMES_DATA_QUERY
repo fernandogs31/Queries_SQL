@@ -1,0 +1,193 @@
+SELECT DISTINCT
+DECODE(eii.empresa_id,100010,'BONDED SAO PAULO',
+                      100009,'CONTAGEM',
+                      100012,'RECIFE',
+                      100013,'ITAJAI',
+                      100014,'SAO PAULO',
+                      100015,'MDI ITAPEVI',
+                      100016,'DIV ITAPEVI') "EMPRESA",
+eco.codigo "ORG",
+eii.invoice_num,
+eie.nome "EXPORTADOR",
+eies.codigo " EXPORTADOR SITE",
+eie1.nome "FORNECEDOR",
+eies1.codigo "FORNECEDOR SITE",
+eii.dt_emissao,
+eitp.codigo "TERMO PAGAMENTO",
+ectb.codigo "MOEDA",
+ectb1.codigo "INCOTERM",
+ectb2.codigo "LOCAL VENDA",
+eii.valor_total,
+eii.peso_liquido,
+eii.dt_envio_ap,
+eii.flag_fr_embutido,
+eii.flag_sg_embutido,
+eii.atributo3,
+eii.creation_date,
+esu.nm_usuario "USUARIO",
+ectb3.descricao "TIPO LINHA",
+eiil.nr_linha,
+msi.segment1 "ITEM",
+eiil.descricao,
+ectn.codigo "NCM",
+ectb4.descricao "UNIDADE MEDIDA",
+eiil.qtde,
+eiil.qtde_utilizada,
+eiil.preco_unitario_m,
+eiil.pesoliq_unit,
+eiil.pesoliq_tot,
+eiil.pesobrt_tot,
+ecu.codigo "UTILIZACAO",
+pha.segment1 "PO_IR"
+--pla.line_num "LINHA PO_IR"
+--prha.segment1 "INT REQ",
+--prla.line_num "LINHA INT REQ"
+
+FROM 
+ecomex.imp_invoices eii,
+ecomex.imp_invoices_lin eiil,
+ecomex.cmx_organizacoes eco,
+ecomex.imp_entidades eie,
+ecomex.imp_entidades_sites eies,
+ecomex.imp_entidades eie1,
+ecomex.imp_entidades_sites eies1,
+ecomex.imp_termos_pgto eitp,
+ecomex.cmx_tabelas_b ectb,
+ecomex.cmx_tabelas_b ectb1,
+ecomex.cmx_tabelas_b ectb2,
+ecomex.cmx_tabelas_b ectb3,
+ecomex.cmx_tab_ncm ectn,
+ecomex.cmx_tabelas_b ectb4,
+ecomex.cmx_utilizacoes ecu,
+apps.po_headers_all pha,
+apps.mtl_system_items_b msi,
+ecomex.sen_usuarios esu
+--apps.po_lines_all pla
+--apps.po_requisition_headers_all prha,
+--apps.po_requisition_lines_all prla
+--ecomex.imp_fabricantes eif
+
+WHERE 1 = 1
+AND eii.dt_emissao between '01/06/2021' and '29/06/2021'
+--AND eiil.int_req_id is not null
+AND eii.invoice_id = eiil.invoice_id
+AND eii.organizacao_id = eco.organizacao_id
+AND eii.export_id = eie.entidade_id
+AND eii.export_site_id = eies.entidade_site_id
+AND eii.fornec_id = eie1.entidade_id
+AND eii.fornec_site_id = eies1.entidade_site_id
+AND eii.termo_id = eitp.termo_id
+AND eii.moeda_id = ectb1.tabela_id
+AND eii.incoterm_id = ectb.tabela_id
+AND eii.local_cvenda_id = ectb2.tabela_id
+AND eiil.tp_linha_id = ectb3.tabela_id
+AND eiil.class_fiscal_id = ectn.ncm_id
+AND eiil.un_medida_id = ectb4.tabela_id
+AND eiil.utilizacao_id = ecu.utilizacao_id
+AND eiil.po_id = pha.po_header_id
+AND eiil.item_id = msi.inventory_item_id
+--AND pha.po_header_id = pla.po_header_id
+--AND eiil.int_req_id = prha.requisition_header_id 
+--AND prha.requisition_header_id = prla.requisition_header_id
+--AND eiil.fabric_id = eif.fabric_id
+AND eco.codigo not in('U41','U42')
+AND eii.created_by = esu.id
+--AND eii.invoice_num = '853319935'
+
+UNION ALL
+
+SELECT DISTINCT
+DECODE(eii.empresa_id,100010,'BONDED SAO PAULO',
+                      100009,'CONTAGEM',
+                      100012,'RECIFE',
+                      100013,'ITAJAI',
+                      100014,'SAO PAULO',
+                      100015,'MDI ITAPEVI',
+                      100016,'DIV ITAPEVI') "EMPRESA",
+eco.codigo "ORG",
+eii.invoice_num,
+eie.nome "EXPORTADOR",
+eies.codigo " EXPORTADOR SITE",
+eie1.nome "FORNECEDOR",
+eies1.codigo "FORNECEDOR SITE",
+eii.dt_emissao,
+eitp.codigo "TERMO PAGAMENTO",
+ectb.codigo "MOEDA",
+ectb1.codigo "INCOTERM",
+ectb2.codigo "LOCAL VENDA",
+eii.valor_total,
+eii.peso_liquido,
+eii.dt_envio_ap,
+eii.flag_fr_embutido,
+eii.flag_sg_embutido,
+eii.atributo3,
+eii.creation_date,
+esu.nm_usuario "USUARIO",
+ectb3.descricao "TIPO LINHA",
+eiil.nr_linha,
+msi.segment1 "ITEM",
+eiil.descricao,
+ectn.codigo "NCM",
+ectb4.descricao "UNIDADE MEDIDA",
+eiil.qtde,
+eiil.qtde_utilizada,
+eiil.preco_unitario_m,
+eiil.pesoliq_unit,
+eiil.pesoliq_tot,
+eiil.pesobrt_tot,
+ecu.codigo "UTILIZACAO",
+--pha.segment1 "PO",
+--pla.line_num "LINHA PO"
+prha.segment1 "INT REQ"
+--prla.line_num "LINHA INT REQ"
+
+FROM 
+ecomex.imp_invoices eii,
+ecomex.imp_invoices_lin eiil,
+ecomex.cmx_organizacoes eco,
+ecomex.imp_entidades eie,
+ecomex.imp_entidades_sites eies,
+ecomex.imp_entidades eie1,
+ecomex.imp_entidades_sites eies1,
+ecomex.imp_termos_pgto eitp,
+ecomex.cmx_tabelas_b ectb,
+ecomex.cmx_tabelas_b ectb1,
+ecomex.cmx_tabelas_b ectb2,
+ecomex.cmx_tabelas_b ectb3,
+ecomex.cmx_tab_ncm ectn,
+ecomex.cmx_tabelas_b ectb4,
+ecomex.cmx_utilizacoes ecu,
+apps.mtl_system_items_b msi,
+ecomex.sen_usuarios esu,
+--apps.po_headers_all pha,
+--apps.po_lines_all pla
+apps.po_requisition_headers_all prha
+--apps.po_requisition_lines_all prla
+--ecomex.imp_fabricantes eif
+
+WHERE 1 = 1
+AND eii.dt_emissao between '01/06/2021' and '29/06/2021'
+AND eiil.int_req_id is not null
+AND eii.invoice_id = eiil.invoice_id
+AND eii.organizacao_id = eco.organizacao_id
+AND eii.export_id = eie.entidade_id
+AND eii.export_site_id = eies.entidade_site_id
+AND eii.fornec_id = eie1.entidade_id
+AND eii.fornec_site_id = eies1.entidade_site_id
+AND eii.termo_id = eitp.termo_id
+AND eii.moeda_id = ectb1.tabela_id
+AND eii.incoterm_id = ectb.tabela_id
+AND eii.local_cvenda_id = ectb2.tabela_id
+AND eiil.tp_linha_id = ectb3.tabela_id
+AND eiil.class_fiscal_id = ectn.ncm_id
+AND eiil.un_medida_id = ectb4.tabela_id
+AND eiil.utilizacao_id = ecu.utilizacao_id
+--AND eiil.po_id = pha.po_header_id 
+--AND pha.po_header_id = pla.po_header_id
+AND eiil.int_req_id = prha.requisition_header_id 
+--AND prha.requisition_header_id = prla.requisition_header_id
+--AND eiil.fabric_id = eif.fabric_id
+AND eiil.item_id = msi.inventory_item_id
+AND eco.codigo not in('U41','U42')
+AND eii.created_by = esu.id
+--AND eii.invoice_num = '853319935';
