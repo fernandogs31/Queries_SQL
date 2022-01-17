@@ -55,3 +55,22 @@ GROUP by ief.excecao_id,
        msi.segment1,
        --iefl.faixa_de_codigo,
        ctn.codigo;
+/
+SELECT IEF.EXCECAO_ID,
+       IEF.DESCRICAO,
+       IEF.INICIO_VIGENCIA,
+       IEF.FIM_VIGENCIA,
+       IET.EX_TARIFARIO_ID,
+       IET.NCM_ID,
+       CTN.CODIGO,
+       IET.NR_ATO_LEGAL,
+       IET.ANO_ATO_LEGAL
+       
+FROM IMP_EXCECOES_FISCAIS IEF,
+     imp_ex_tarifario IET,
+     CMX_TAB_NCM CTN
+     
+WHERE IEF.TIPO = 'II'
+AND IEF.DATA_INATIVACAO IS NULL
+AND IEF.EX_NCM_ID = IET.EX_TARIFARIO_ID
+AND IET.NCM_ID = CTN.NCM_ID
