@@ -1,0 +1,47 @@
+SELECT msi.segment1 ITEM,
+msi.description DESCRIPTION,
+gmc.material_class MATERIAL_CLASS,
+tl.terms_value TERMS_VALUE,
+tl.description TERMS_DESCRIPTION,
+msi.inventory_item_status_code ITEM_STATUS,
+mcv.attribute4 VARIABLE_COMP_ENABLED,
+mcv.attribute5 MANUFACTURED_ITEM,
+mcv.attribute6 HARDWARE_ITEM,
+mcv.attribute7 MODALITY,
+(Select vflex.description
+From apps.FND_FLEX_VALUES_VL vflex,
+apps.FND_FLEX_VALUESET_V vset
+Where vflex.flex_value_set_id = vset.flex_value_set_id
+And vset.flex_value_set_name = 'GEMS_MC_MODALITY'
+And vflex.flex_value = mcv.attribute7) MODALITY_DESC,
+mcv.attribute12 PRODUCT_LINE,
+mcv.attribute8 MAT_CLASS_COGS_ACCOUNT,
+mcv.attribute11 MAT_CLASS_REV_ACCOUNT,
+MSI.INVENTORY_ITEM_FLAG INVENTORY_FLAG
+--mcv.attribute9 NON_INVENTORY_TYPE,
+/*(Select vflex.description
+From apps.FND_FLEX_VALUES_VL vflex,
+apps.FND_FLEX_VALUESET_V vset
+Where vflex.flex_value_set_id = vset.flex_value_set_id
+And vset.flex_value_set_name = 'GEMS_NON_INVENTORY_TYPE'
+And vflex.flex_value = mcv.attribute9) NON_INVENTORY_DESC*/
+FROM gems_ont.gems_fs_terms th,
+gems_ont.gems_fs_terms_lines tl,
+apps.gems_material_class_v gmc,
+apps.mtl_item_categories mic,
+apps.mtl_system_items_b msi,
+apps.mtl_parameters mp,
+apps.mtl_categories_v mcv
+WHERE msi.inventory_item_id = mic.inventory_item_id
+AND msi.organization_id = mic.organization_id
+AND mic.category_id = mcv.category_id
+AND mic.category_set_id = 403
+AND mic.category_id = gmc.category_id
+AND gmc.material_class = tl.terms_line_code
+AND mic.organization_id = mp.organization_id
+AND th.terms_type = 'R'
+AND th.enabled_flag = 'Y'
+AND th.org_id = 4330
+AND th.terms_header_id = tl.terms_header_id
+AND msi.organization_id = 4335
+AND gmc.material_class IS NOT NULL
