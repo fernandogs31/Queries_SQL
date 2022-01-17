@@ -1,0 +1,21 @@
+--Confirm which is the latest level with parent item
+select distinct bom.COMPNT_ITEM_NBR L1_item, bom.parnt_typ L1_type
+from SSOODSVIEWS.PRD_REVSN_D_X part
+left join ssoodsviews.BOM_INVNTRY_COMPNT_F_X bom on bom.parnt_item_revsn_idn=part.prd_revsn_idn and bom.src_idn=226
+and bom.parnt_typ in ('Parent Catalog','Offering Collector','ATO Option Class','ATO Model','PTO Option Class','PTO Model','Kit')
+left join ssoodsviews.BOM_INVNTRY_COMPNT_F_X bom2 on bom.compnt_item_revsn_idn=bom2.parnt_item_revsn_idn and bom2.src_idn=226
+and bom2.parnt_typ in ('Parent Catalog','Offering Collector','ATO Option Class','ATO Model','PTO Option Class','PTO Model','Kit')
+left join ssoodsviews.BOM_INVNTRY_COMPNT_F_X bom3 on bom2.compnt_item_revsn_idn=bom3.parnt_item_revsn_idn and bom3.src_idn=226
+and bom3.parnt_typ in ('Parent Catalog','Offering Collector','ATO Option Class','ATO Model','PTO Option Class','PTO Model','Kit')
+left join ssoodsviews.BOM_INVNTRY_COMPNT_F_X bom4 on bom3.compnt_item_revsn_idn=bom4.parnt_item_revsn_idn and bom4.src_idn=226
+and bom4.parnt_typ in ('Parent Catalog','Offering Collector','ATO Option Class','ATO Model','PTO Option Class','PTO Model','Kit')
+left join ssoodsviews.BOM_INVNTRY_COMPNT_F_X bom5 on bom4.compnt_item_revsn_idn=bom5.parnt_item_revsn_idn and bom5.src_idn=226
+and bom5.parnt_typ in ('Parent Catalog','Offering Collector','ATO Option Class','ATO Model','PTO Option Class','PTO Model','Kit')
+where part.prd_nbr_key in
+(
+	'B79572CB'
+)
+and part.prd_stat not in ('Obsolete')
+and part.curnt_revsn_flg='Y'
+order by part.prd_nbr_key
+; 
