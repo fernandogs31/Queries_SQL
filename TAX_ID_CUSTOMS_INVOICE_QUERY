@@ -1,0 +1,87 @@
+SELECT DISTINCT regexp_replace(LPAD(EST_ID.registration_number, 14),'([0-9]{2})([0-9]{3})([0-9]{3})([0-9]{4})','\1.\2.\3/\4-')as CNPJ
+  FROM apps.oe_order_headers_all ooha,
+       apps.oe_order_lines_all oola,
+       apps.wsh_delivery_details wdd,
+       apps.wsh_delivery_assignments wda,
+       apps.wsh_new_deliveries wnd,
+       (select distinct hcsu.SITE_USE_ID,
+                        XLE_LOC_ASS_CNPJ.registration_number
+          from apps.hz_cust_accounts hca,
+               apps.hz_parties hp,
+               apps.HZ_CUST_ACCT_SITES_ALL hcas,
+               apps.hz_party_sites hps,
+               apps.hz_locations hl,
+               apps.hz_party_site_uses hpsu,
+               apps.hz_cust_site_uses_all hcsu,
+               apps.hr_all_organization_units hou,
+               apps.PO_LOCATION_ASSOCIATIONS_ALL plaa,
+               (SELECT QRSLT.organization_id, Xr.REGISTRATION_NUMBER
+                  FROM apps.Xle_Registrations xr,
+                       (SELECT LegalAssociationsEO.ASSOCIATION_ID,
+                               LegalAssociationsEO.ASSOCIATION_TYPE_ID,
+                               LegalAssociationsEO.SUBJECT_ID,
+                               LegalAssociationsEO.SUBJECT_PARENT_ID,
+                               LegalAssociationsEO.OBJECT_ID,
+                               LegalAssociationsEO.EFFECTIVE_FROM,
+                               LegalAssociationsEO.EFFECTIVE_TO,
+                               CTYPE_OBJ.NAME Obj_Type,
+                               OOD.ORGANIZATION_ID Organization_ID,
+                               OOD.ORGANIZATION_NAME Organization_Name,
+                               L.location_code location,
+                               (select territory_short_name
+                                  from apps.fnd_territories_vl
+                                 where territory_code = l.country) COUNTRY,
+                               l.address_line_1 || ' ' || l.town_or_city || ' ' ||
+                               l.region_1 || ' ' || l.postal_code "ADDRESS",
+                               decode(LegalAssociationsEO.ASSOCIATION_ID,
+                                      null,
+                                      'InvNew',
+                                      'InvOld') New_Old_Switcher,
+                               decode(LegalAssociationsEO.ASSOCIATION_ID,
+                                      null,
+                                      'InvDeleteEnabled',
+                                      'InvDeleteDisabled') Delete_Switcher
+                          FROM apps.XLE_ASSOCIATIONS             LegalAssociationsEO,
+                               apps.XLE_ASSOCIATION_TYPES        ATYPE,
+                               apps.XLE_ASSOC_OBJECT_TYPES       CTYPE_OBJ,
+                               apps.XLE_ASSOC_OBJECT_TYPES       CTYPE_SUB,
+                               apps.ORG_ORGANIZATION_DEFINITIONS OOD,
+                               apps.HR_ORGANIZATION_UNITS        ORG,
+                               apps.HR_ORGANIZATION_INFORMATION  ORI,
+                               apps.HR_LOCATIONS                 L
+                         WHERE ATYPE.ASSOCIATION_TYPE_ID =
+                               LegalAssociationsEO.ASSOCIATION_TYPE_ID
+                           AND ATYPE.OBJECT_TYPE_ID = CTYPE_OBJ.OBJECT_TYPE_ID
+                           AND ATYPE.SUBJECT_TYPE_ID =
+                               CTYPE_SUB.OBJECT_TYPE_ID
+                           AND CTYPE_OBJ.NAME = 'INVENTORY_ORGANIZATION'
+                           AND LegalAssociationsEO.OBJECT_ID =
+                               OOD.ORGANIZATION_ID
+                           AND OOD.ORGANIZATION_ID = ORG.organization_id
+                           AND ORG.organization_id = ORI.organization_id
+                           AND ORG.location_id = L.location_id
+                           AND ORI.org_information_context = 'CLASS'
+                           AND ORI.org_information1 = 'INV'
+                           AND ORI.org_information2 = 'Y') QRSLT
+                 Where QRSLT.subject_id = xr.source_id
+                   And xr.JURISDICTION_ID = 6) XLE_LOC_ASS_CNPJ
+         where hp.party_id = hca.party_id
+           and hcsu.org_id = hou.organization_id
+           and hca.cust_account_id = hcas.cust_account_id
+           and hp.party_id = hps.party_id
+           and plaa.site_use_id = hcsu.site_use_id
+           and hps.location_id = hl.location_id
+           and hps.party_site_id = hpsu.party_site_id
+           and hcsu.cust_acct_site_id = hcas.cust_acct_site_id
+           and hps.party_site_id = hcas.party_site_id
+           and hcsu.site_use_code = 'SHIP_TO'
+           and plaa.organization_id = XLE_LOC_ASS_CNPJ.organization_id) EST_ID
+WHERE ooha.header_id = oola.header_id
+   AND wdd.source_line_id = oola.line_id
+   AND wnd.organization_id = oola.ship_from_org_id
+   AND wdd.delivery_detail_id = wda.delivery_detail_id
+   AND wnd.delivery_id = wda.delivery_id
+   AND wdd.org_id = oola.org_id
+   AND wda.delivery_id is not null
+   AND EST_ID.SITE_USE_ID = ooha.SHIP_TO_ORG_ID
+   AND wnd.delivery_id = 862746283;
