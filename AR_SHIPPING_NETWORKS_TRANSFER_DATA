@@ -1,0 +1,161 @@
+SELECT msnv.FROM_ORGANIZATION_CODE                                 AS From_, 
+  msnv.TO_ORGANIZATION_CODE                                        AS To_, 
+  DECODE( msnv.INTERNAL_ORDER_REQUIRED_FLAG , '1','Yes', '2','No') AS internal_ord, 
+  msnv.CREATION_DATE, 
+  (SELECT gccb.segment1 
+    ||'.' 
+    ||gccb.segment2 
+    ||'.' 
+    ||gccb.segment3 
+    ||'.' 
+    ||gccb.segment4 
+    ||'.' 
+    ||gccb.segment5 
+    ||'.' 
+    ||gccb.segment6 
+    ||'.' 
+    ||gccb.segment7 
+    ||'.' 
+    ||gccb.segment8 
+    ||'.' 
+    ||gccb.segment9 
+  FROM apps.gl_code_combinations gccb 
+  WHERE gccb.code_combination_id = msnv.INTERORG_TRANSFER_CR_ACCOUNT 
+  ) AS Transfer_Credit_Acc, 
+  (SELECT gccb.segment1 
+    ||'.' 
+    ||gccb.segment2 
+    ||'.' 
+    ||gccb.segment3 
+    ||'.' 
+    ||gccb.segment4 
+    ||'.' 
+    ||gccb.segment5 
+    ||'.' 
+    ||gccb.segment6 
+    ||'.' 
+    ||gccb.segment7 
+    ||'.' 
+    ||gccb.segment8 
+    ||'.' 
+    ||gccb.segment9 
+  FROM apps.gl_code_combinations gccb 
+  WHERE gccb.code_combination_id = msnv.INTERORG_PRICE_VAR_ACCOUNT 
+  ) AS Purchase_Price_Var_ACC , 
+  (SELECT gccb.segment1 
+    ||'.' 
+    ||gccb.segment2 
+    ||'.' 
+    ||gccb.segment3 
+    ||'.' 
+    ||gccb.segment4 
+    ||'.' 
+    ||gccb.segment5 
+    ||'.' 
+    ||gccb.segment6 
+    ||'.' 
+    ||gccb.segment7 
+    ||'.' 
+    ||gccb.segment8 
+    ||'.' 
+    ||gccb.segment9 
+  FROM apps.gl_code_combinations gccb 
+  WHERE gccb.code_combination_id = msnv.INTERORG_RECEIVABLES_ACCOUNT 
+  ) AS Inter_org_Rec_acc, 
+  (SELECT gccb.segment1 
+    ||'.' 
+    ||gccb.segment2 
+    ||'.' 
+    ||gccb.segment3 
+    ||'.' 
+    ||gccb.segment4 
+    ||'.' 
+    ||gccb.segment5 
+    ||'.' 
+    ||gccb.segment6 
+    ||'.' 
+    ||gccb.segment7 
+    ||'.' 
+    ||gccb.segment8 
+    ||'.' 
+    ||gccb.segment9 
+  FROM apps.gl_code_combinations gccb 
+  WHERE gccb.code_combination_id = msnv.INTERORG_PAYABLES_ACCOUNT 
+  ) AS Inter_Org_Payables_acc, 
+  (SELECT gccb.segment1 
+    ||'.' 
+    ||gccb.segment2 
+    ||'.' 
+    ||gccb.segment3 
+    ||'.' 
+    ||gccb.segment4 
+    ||'.' 
+    ||gccb.segment5 
+    ||'.' 
+    ||gccb.segment6 
+    ||'.' 
+    ||gccb.segment7 
+    ||'.' 
+    ||gccb.segment8 
+    ||'.' 
+    ||gccb.segment9 
+  FROM apps.gl_code_combinations gccb 
+  WHERE gccb.code_combination_id = msnv.INTRANSIT_INV_ACCOUNT 
+  )               AS Intranst_Inv_Acc, 
+  msnv.ATTRIBUTE1 AS Net_Type, 
+  (SELECT vendor_name 
+  FROM apps.PO_VENDORS V 
+  WHERE v.vendor_id = msnv.ATTRIBUTE2 
+  ) AS Supplier, 
+  (SELECT vendor_site_code 
+  FROM apps.PO_VENDOR_SITES_ALL S 
+  WHERE S.VENDOR_ID    = msnv.ATTRIBUTE2 
+  AND s.VENDOR_SITE_ID = msnv.ATTRIBUTE3 
+  )               AS Site, 
+  msnv.ATTRIBUTE4 AS ISOALE_REC_T, 
+  (SELECT t.name 
+  FROM apps.OE_TRANSACTION_TYPES_TL T 
+  WHERE T.TRANSACTION_TYPE_ID = msnv.ATTRIBUTE5 
+  )AS Dist_TXn_Type_Order, 
+  (SELECT t.name 
+  FROM apps.OE_TRANSACTION_TYPES_TL T 
+  WHERE T.TRANSACTION_TYPE_ID = msnv.ATTRIBUTE6 
+  )AS FWD_TXn_Type_Order, 
+  (SELECT gccb.segment1 
+    ||'.' 
+    ||gccb.segment2 
+    ||'.' 
+    ||gccb.segment3 
+    ||'.' 
+    ||gccb.segment4 
+    ||'.' 
+    ||gccb.segment5 
+    ||'.' 
+    ||gccb.segment6 
+    ||'.' 
+    ||gccb.segment7 
+    ||'.' 
+    ||gccb.segment8 
+    ||'.' 
+    ||gccb.segment9 
+  FROM apps.gl_code_combinations gccb 
+  WHERE gccb.code_combination_id = msnv.ATTRIBUTE15 
+  ) AS Isoale_ap_Acc, 
+  msnv.ATTRIBUTE14 Cascade_Ship_set 
+
+FROM apps.MTL_SHIPPING_NETWORK_VIEW msnv 
+WHERE FROM_ORGANIZATION_CODE IN 
+  (SELECT ood.ORGANIZATION_code 
+  FROM apps.org_organization_definitions ood 
+  WHERE ood.SET_OF_BOOKS_ID  = 230 
+  AND ood.ORGANIZATION_code IN ('CSC', 'CTC', 'DIV', 'DMG', 'DRC', 'DSC', 'DSP', 'HGP', 'HSV', 'MCN', 'MDI', 'MDX', 'MRC', 'NUC', 'PCN', 'PMD', 'PMI', 'PRC', 'PTC', 'PWH', 'SBZ', 'SGC', 'U42', 'ULC' ,'C83') 
+  ) 
+AND TO_ORGANIZATION_CODE IN 
+  (SELECT ood.ORGANIZATION_code 
+  FROM apps.org_organization_definitions ood 
+  WHERE ood.SET_OF_BOOKS_ID  = 230 
+  AND ood.ORGANIZATION_code IN ('CSC', 'CTC', 'DIV', 'DMG', 'DRC', 'DSC', 'DSP', 'HGP', 'HSV', 'MCN', 'MDI', 'MDX', 'MRC', 'NUC', 'PCN', 'PMD', 'PMI', 'PRC', 'PTC', 'PWH', 'SBZ', 'SGC', 'U42', 'ULC','C83') 
+  ) 
+  --AND msnv.CREATION_DATE >= '07-sep-2017' 
+ORDER BY 1, 
+  2
