@@ -1,0 +1,18 @@
+SELECT     responsibility_name ,
+       Frg.Request_Group_Name,
+       Fcpv.User_Concurrent_Program_Name,
+       Fcpv.Description
+
+FROM   apps.fnd_request_groups frg,
+       apps.fnd_request_group_units frgu,
+       apps.fnd_concurrent_programs_vl fcpv,
+       apps.fnd_responsibility_vl frv
+
+WHERE Frgu.Request_Unit_Type = 'P'
+AND   frgu.request_group_id = frg.request_group_id
+AND   Frgu.Request_Unit_Id = Fcpv.Concurrent_Program_Id
+AND   Frv.Request_Group_Id = Frg.Request_Group_Id
+--AND Frv.Responsibility_Name Like %XXXX%'
+AND Fcpv.User_Concurrent_Program_Name like 'GE RMA Creation Program'
+
+ORDER BY Responsibility_Name;
