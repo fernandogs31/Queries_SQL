@@ -1,0 +1,42 @@
+SELECT DISTINCT
+DECODE(eie.empresa_id,100010,'BONDED SAO PAULO',
+                      100009,'CONTAGEM',
+                      100012,'RECIFE',
+                      100013,'ITAJAI',
+                      100014,'SAO PAULO',
+                      100015,'MDI ITAPEVI',
+                      100016,'DIV ITAPEVI') "EMPRESA",
+eco.codigo "ORG",
+ectb.descricao "TIPO EMBARQUE",
+eie.embarque_num,
+eie.embarque_ano,
+eie.referencia,
+eic.house "NR CONHECIMENTO",
+ectb1.codigo "MOEDA SEGURO",
+eie.aliq_seguro,
+eie.vrt_sg_m,
+eie.creation_date,
+esu.nm_usuario "USUARIO",
+eii.invoice_num,
+eii.valor_total
+
+FROM
+ecomex.imp_embarques eie,
+--ecomex.imp_embarques_ad eiea,
+ecomex.imp_embarques_ad_invoice eieai,
+ecomex.cmx_organizacoes eco,
+ecomex.imp_invoices eii,
+ecomex.sen_usuarios esu,
+ecomex.cmx_tabelas_b ectb,
+ecomex.cmx_tabelas_b ectb1,
+ecomex.imp_conhecimentos eic
+
+WHERE 1 = 1
+AND eie.creation_date between '01/06/21' and '30/06/21'
+--AND eie.embarque_id = eiea.embarque_id
+AND eie.organizacao_id = eco.organizacao_id
+AND eie.embarque_id = eii.embarque_id
+AND eie.created_by = esu.id
+AND eie.tp_embarque_id = ectb.tabela_id
+AND eie.moeda_seguro_id = ectb1.tabela_id
+AND eie.conhec_id = eic.conhec_id;
