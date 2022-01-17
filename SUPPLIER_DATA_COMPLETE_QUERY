@@ -1,0 +1,113 @@
+SELECT aps.vendor_name "Supplier Name",
+       aps.segment1 "Supplier Number",
+       hp.party_number "Registry Id",
+       hp.party_type "Organization Type",
+       apss.vendor_site_code "Site Name",
+       aps.vendor_type_lookup_code "Supplier Category",
+       hl.address1 || ' ' || hl.address2 || ' ' || hl.address3 || ' ' ||
+       hl.address4 || ' ' || hl.city || ' ' || hl.state || ' ' ||
+       hl.postal_code "Supplier Address",
+       ftl.NLS_TERRITORY "Country",
+       TO_CHAR(comm.phone_number) "Phone",
+       comm.email_address "Email",
+       TRUNC(aps.creation_date) "Supplier Created On",
+       TRUNC(aps.last_update_date) "Supplier Last Updated On",
+       fus.user_name "Supplier Last Updated By",
+       TRUNC(poht.creation_date) "Last PO by Supplier",
+       DECODE (apss.purchasing_site_flag, 'Y', 'Purchasing') "Purpose1",
+       DECODE (apss.pay_site_flag, 'Y', 'Payment') "Purpose2",
+       DECODE (apss.rfq_only_site_flag, 'Y', 'RFQ') "Purpose3",
+       hp1.person_first_name "Contact First Name",
+       hp1.person_last_name "Contact Last Name",
+       hou.name "Operating Unit",
+       gcc.segment1||'-'||gcc.segment2||'-'||gcc.segment3||'-'||gcc.segment4||'-'||gcc.segment5 "Liability Account",
+       hle.name "Legal Entity",
+       ps.prod_desc "Product AND Services Category",
+       aps.vat_registration_num  "Tax Registration Number",
+       apss.vat_code "Tax Classification",       
+       hp.duns_number "D-U-N-S Number",
+       hp.curr_fy_potential_revenue "Annual Revenue",
+       DECODE(zptp.self_assess_flag, 'N', 'No','Y', 'Yes', zptp.self_assess_flag) AS "Self Assessment Flag",
+       DECODE(aps.one_time_flag, 'N', 'No','Y', 'Yes', aps.one_time_flag) "One Time Flag",
+       DECODE(apss.auto_tax_calc_flag, 'N', 'No', 'Y', 'Yes', apss.auto_tax_calc_flag) "AutoCalculate Tax Flag",
+       DECODE(apss.offset_tax_flag, 'N', 'No', 'Y', 'Yes', apss.offset_tax_flag) "Allow Offset Taxes Flag",
+       DECODE(apss.ap_tax_rounding_rule, 'D', 'Down', 'N', 'Nearest', 'U', 'Up', NULL) "Rounding Rule",
+       DECODE(apss.amount_includes_tax_flag, 'N', 'No','Y', 'Yes', apss.amount_includes_tax_flag) "Set Inv Val as Tax Inclusive",
+       hla.location_code "Ship To Location",
+       hla1.location_code "Bill To Location",
+       apss.ship_via_lookup_code "Ship Via",
+       aps.enforce_ship_to_location_code "Enforce Ship-to_Loc",
+       aps.days_early_receipt_allowed "Days Early Rcpt Allowed",
+       aps.days_late_receipt_allowed "Days Late Rcpt Allowed",
+       flv.description "Receipt Routing Method",
+       CASE WHEN aps.inspection_required_flag = 'N' AND aps.receipt_required_flag = 'N' THEN '2-Way'
+         WHEN aps.inspection_required_flag = 'N' AND aps.receipt_required_flag = 'Y' THEN '3-Way'
+           WHEN aps.inspection_required_flag = 'Y' AND aps.receipt_required_flag = 'Y' THEN '4-Way'
+             ELSE 'NA' END "Match Option",
+       aps.qty_rcv_tolerance "Qty Receive Tolerance",
+       aps.qty_rcv_exception_code "Qty Receive Exception",
+       aps.receipt_days_exception_code "Receipt Date Exception",
+       apss.payment_method_lookup_code "Payment Method"
+       
+  FROM apps.ap_suppliers aps
+       ,apps.hz_locations hl
+       ,apps.hz_parties hp
+       ,apps.hz_party_sites hps
+       ,apps.ap_supplier_sites_all apss
+       ,apps.hz_relationships hz
+       ,apps.hz_parties hp1
+       ,apps.gl_code_combinations gcc
+       ,apps.hr_operating_units hou
+       ,apps.hr_legal_entities hle
+       ,apps.hr_locations hla
+       ,apps.hr_locations hla1
+       ,apps.fnd_lookup_values flv
+       ,apps.fnd_territories_vl ftl
+       ,apps.pos_sup_products_services psps
+       ,apps.zx_party_tax_profile zptp
+       ,apps.fnd_user fus
+       ,(SELECT MAX(phone_number) phone_number,
+                MAX(email_address) email_address,
+                owner_table_id
+          FROM (SELECT hcp.phone_number,
+                       hcp.email_address,
+                       hcp.owner_table_id
+                  FROM ar.hz_contact_points hcp
+                 WHERE hcp.owner_table_name = UPPER('HZ_PARTY_SITES')
+                   AND hcp.contact_point_type IN ('PHONE', 'EMAIL'))
+         GROUP BY owner_table_id) comm,
+        (SELECT ffvt.description prod_desc, ffv.flex_value product_code
+            FROM fnd_flex_value_sets ffvs, fnd_flex_values ffv, fnd_flex_values_tl ffvt
+            WHERE ffvs.flex_value_set_name = 'XX ITEM CATEGORY'
+            AND ffvs.flex_value_set_id = ffv.flex_value_set_id
+            AND ffv.flex_value_id = ffvt.flex_value_id) ps,
+        (SELECT ph.creation_date, ph.vendor_id
+          FROM po.po_headers_all ph
+         WHERE ph.creation_date in
+               (SELECT max(creation_date)
+                  FROM po.po_headers_all pha
+                 WHERE pha.vendor_id = ph.vendor_id)) poht
+                 
+  WHERE aps.party_id = hp.party_id
+    AND hp.party_id = hps.party_id
+    AND (( aps.end_date_active IS NULL) OR (TRUNC(aps.end_date_active) > TRUNC(SYSDATE)) )
+    AND aps.vendor_id = apss.vendor_id
+    AND apss.party_site_id = hps.party_site_id    
+    AND hl.location_id = hps.location_id
+    AND comm.owner_table_id(+) = hps.party_site_id 
+    AND hz.SUBJECT_ID(+) = hp.party_id
+    AND hz.object_id = hp1.party_id(+)
+    AND gcc.code_combination_id = apss.accts_pay_code_combination_id
+    AND apss.org_id = hou.organization_id
+    AND hou.default_legal_context_id = hle.organization_id
+    AND apss.ship_to_location_id = hla.location_id
+    AND apss.bill_to_location_id = hla1.location_id
+    AND aps.receiving_routing_id = flv.lookup_code
+    AND flv.lookup_type = 'RCV_ROUTING_HEADERS'
+    AND hl.country = ftl.TERRITORY_CODE
+    AND psps.vendor_id(+) = aps.vendor_id
+    AND psps.segment1 = ps.product_code(+)
+    AND hp.party_id = zptp.party_id(+)
+    AND fus.user_id(+) = aps.last_updated_by
+    AND poht.vendor_id(+) = aps.vendor_id
+    AND hou.name like '%GEMSAM_OU_CLP_GEMS_CHL%';
