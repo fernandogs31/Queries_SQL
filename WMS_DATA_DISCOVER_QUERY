@@ -1,8 +1,6 @@
 # Queries_SQL
 Queries SQL created 
 
-*** WMS_DATA_DISCOVER_QUERY ***
-
 SELECT 'NON CONF-N' -- SUBINVENTTORY NAME
 FROM
   apps.po_headers_all pha,
