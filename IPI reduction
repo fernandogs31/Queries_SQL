@@ -1,0 +1,346 @@
+-- Link Credit Memo com Nota original pode ser criado via campo "Previous_customer_trx_id" da tabela apps.ra_customer_trx_all
+SELECT org.organization_code "ORG CODE",
+       batch.name "SOURCE",
+       rcta.trx_date "DATE",
+       rcta.creation_date "CREATION DATE",
+       rcta.last_update_date "LAST UPDATE DATE",
+       rcta.trx_number "INVOICE NUMBER",
+       rcta.interface_header_attribute1 "REFERENCE",
+       (select trx_number
+          from apps.ra_customer_trx_all rcta_cross
+         where rcta_cross.customer_trx_id = rcta.RELATED_CUSTOMER_TRX_ID
+           and rcta_cross.org_id = rcta.org_id
+           and rownum = 1) "CROSS REFERENCE",
+       rctt.name "TRANSACTION TYPE",
+       nvl(line.line_type, 'HEADER') "TYPE",
+       line.interface_line_attribute2 "ORDER TYPE",
+       rcta.status_trx "STATUS AR",
+       dist.account_class,
+       dist.amount,
+       gcc.concatenated_segments "DISTRIBUTION ACCOUNT",
+       line.line_number,
+       vat.tax_code,
+       -- rcta.customer_trx_id,
+       item.segment1 "PART NUMBER",
+       --line.link_to_cust_trx_line_id,
+       --line.customer_trx_line_id,
+       line.GLOBAL_ATTRIBUTE1 CFOP,
+       line.GLOBAL_ATTRIBUTE2 NCM,
+       line.GLOBAL_ATTRIBUTE3 "TRANSACTION CLASS",
+       line.GLOBAL_ATTRIBUTE4 "ITEM ORIGIN",
+       line.GLOBAL_ATTRIBUTE5 "ITEM FISCAL TYPE",
+       line.GLOBAL_ATTRIBUTE6 "CST_IPI",
+       line.GLOBAL_ATTRIBUTE7 "CST ICMS",
+       rcta.reason_code,
+       rcta.invoice_currency_code "CURRENCY",
+       rcta.exchange_rate "EXCHANGE RATE",
+       decode(ba.electronic_inv_status,
+              '1',
+              'Enviada',
+              '2',
+              'Finalizada',
+              '3',
+              'Error',
+              '4',
+              'Cancelada',
+              '5',
+              'Rejeitada',
+              '6',
+              'Inutilizada',
+              '7',
+              'Contingencia') "STATUS SEFAZ",
+       -- Customer
+       (SELECT HP.PARTY_NAME
+          FROM APPS.HZ_CUST_SITE_USES_ALL  HCSUA,
+               APPS.HZ_CUST_ACCT_SITES_ALL HCASA,
+               APPS.HZ_CUST_ACCOUNTS_ALL   HCAA,
+               APPS.HZ_PARTIES             HP,
+               APPS.HZ_PARTY_SITES         HPS
+         WHERE HCSUA.CUST_ACCT_SITE_ID = HCASA.CUST_ACCT_SITE_ID
+           AND HCASA.CUST_ACCOUNT_ID = HCAA.CUST_ACCOUNT_ID
+           AND HCAA.PARTY_ID = HPS.PARTY_ID
+           AND HP.PARTY_ID = HPS.PARTY_ID
+           AND HCASA.PARTY_SITE_ID = HPS.PARTY_SITE_ID
+           AND HCSUA.SITE_USE_ID = RCTA.BILL_TO_SITE_USE_ID) CUSTOMER,
+       -- Customer Number
+       (SELECT HCAA.ACCOUNT_NUMBER
+          FROM APPS.HZ_CUST_SITE_USES_ALL  HCSUA,
+               APPS.HZ_CUST_ACCT_SITES_ALL HCASA,
+               APPS.HZ_CUST_ACCOUNTS_ALL   HCAA,
+               APPS.HZ_PARTIES             HP,
+               APPS.HZ_PARTY_SITES         HPS
+         WHERE HCSUA.CUST_ACCT_SITE_ID = HCASA.CUST_ACCT_SITE_ID
+           AND HCASA.CUST_ACCOUNT_ID = HCAA.CUST_ACCOUNT_ID
+           AND HCAA.PARTY_ID = HPS.PARTY_ID
+           AND HP.PARTY_ID = HPS.PARTY_ID
+           AND HCASA.PARTY_SITE_ID = HPS.PARTY_SITE_ID
+           AND HCSUA.SITE_USE_ID = RCTA.BILL_TO_SITE_USE_ID) CUSTOMER_NUMBER,
+       -- Ship-To
+       (SELECT HCSUA.LOCATION
+          FROM APPS.HZ_CUST_SITE_USES_ALL     HCSUA,
+               APPS.HZ_CUST_ACCT_SITES_ALL    HCASA,
+               APPS.HZ_CUST_ACCOUNTS_ALL      HCAA,
+               APPS.HZ_PARTIES                HP,
+               APPS.HZ_PARTY_SITES            HPS,
+               APPS.HZ_LOCATIONS              HL,
+               APPS.HR_ALL_ORGANIZATION_UNITS HOU
+         WHERE HCSUA.CUST_ACCT_SITE_ID = HCASA.CUST_ACCT_SITE_ID
+           AND HCASA.CUST_ACCOUNT_ID = HCAA.CUST_ACCOUNT_ID
+           AND HCAA.PARTY_ID = HPS.PARTY_ID
+           AND HP.PARTY_ID = HPS.PARTY_ID
+           AND HCASA.PARTY_SITE_ID = HPS.PARTY_SITE_ID
+           AND HPS.LOCATION_ID = HL.LOCATION_ID
+           AND HCSUA.ORG_ID = HOU.ORGANIZATION_ID
+           AND HCSUA.SITE_USE_CODE = 'SHIP_TO'
+           AND HCSUA.SITE_USE_ID = RCTA.SHIP_TO_SITE_USE_ID) SHIP_TO,
+       -- Bill-To
+       (SELECT HCSUA.LOCATION
+          FROM APPS.HZ_CUST_SITE_USES_ALL     HCSUA,
+               APPS.HZ_CUST_ACCT_SITES_ALL    HCASA,
+               APPS.HZ_CUST_ACCOUNTS_ALL      HCAA,
+               APPS.HZ_PARTIES                HP,
+               APPS.HZ_PARTY_SITES            HPS,
+               APPS.HZ_LOCATIONS              HL,
+               APPS.HR_ALL_ORGANIZATION_UNITS HOU
+         WHERE HCSUA.CUST_ACCT_SITE_ID = HCASA.CUST_ACCT_SITE_ID
+           AND HCASA.CUST_ACCOUNT_ID = HCAA.CUST_ACCOUNT_ID
+           AND HCAA.PARTY_ID = HPS.PARTY_ID
+           AND HP.PARTY_ID = HPS.PARTY_ID
+           AND HCASA.PARTY_SITE_ID = HPS.PARTY_SITE_ID
+           AND HPS.LOCATION_ID = HL.LOCATION_ID
+           AND HCSUA.ORG_ID = HOU.ORGANIZATION_ID
+           AND HCSUA.SITE_USE_CODE = 'BILL_TO'
+           AND HCSUA.SITE_USE_ID = RCTA.BILL_TO_SITE_USE_ID) BILL_TO,
+       (select comments
+          from apps.ra_customer_trx_all rcta
+         where rcta.customer_trx_id = ba.customer_trx_id
+           and rownum = 1) "COMMENTS"
+--,rcta.*
+  FROM apps.ra_customer_trx_lines_all    line,
+       apps.ra_cust_trx_line_gl_dist_all dist,
+       apps.gl_code_combinations_kfv     gcc,
+       apps.ra_customer_trx_all          rcta,
+       apps.ar_vat_tax_all               vat,
+       apps.jl_br_customer_trx_exts      ba,
+       apps.ra_batch_sources_all         batch,
+       apps.ra_cust_trx_types_all        rctt,
+       apps.mtl_system_items_b           item,
+       apps.org_organization_definitions org
+ WHERE 1 = 1
+   AND rcta.customer_trx_id = ba.customer_trx_id
+   AND batch.org_id = 4330
+   AND rctt.org_id = 4330
+   AND rcta.cust_trx_type_id = rctt.cust_trx_type_id
+   AND batch.batch_source_id = rcta.batch_source_id
+   AND vat.vat_tax_id(+) = line.vat_tax_id
+   and line.LINE_TYPE IN ('TAX','LINE')
+   AND rcta.customer_trx_id = line.customer_trx_id(+)
+   AND rcta.customer_trx_id = dist.customer_trx_id
+   AND gcc.code_combination_id = dist.code_combination_id
+   AND line.customer_trx_line_id(+) = dist.customer_trx_line_id
+   AND item.inventory_item_id(+) = line.inventory_item_id -- (+) -->
+   AND item.organization_id(+) = line.warehouse_id
+   AND org.organization_id(+) = item.organization_id
+   AND rcta.org_id = 4330
+   AND dist.amount > 0
+   AND (vat.tax_code LIKE '%IPI%' OR vat.tax_code IS NULL)
+   AND rcta.trx_date between '06-MAR-2022' and '09-MAR-2022'
+      --and rcta.CUSTOMER_TRX_ID = '64343435'
+      -- AND dist.account_class IN ('REC') --> Se precisar das informações de TAX, necessário "comentar" essa linha.
+      -- and rcta.trx_number in ('9589') --> Escolher o numero da Nota se quiser focar em alguma específica ou comentar essa linha.
+   and rctt.name in ('EN-RET DEMO ICMS 50') --> Escolher o Tipo de transação se quiser focar em alguma específica ou comentar essa linha.
+--and rcta.interface_header_attribute1 in ('4710105') -->Escolher a GON se quiser focar em alguma específica ou comentar essa linha.
+-- Link Credit Memo com Nota original pode ser criado via campo "Previous_customer_trx_id" da tabela apps.ra_customer_trx_all
+Union
+-- Link Credit Memo com Nota original pode ser criado via campo "Previous_customer_trx_id" da tabela apps.ra_customer_trx_all
+SELECT org.organization_code "ORG CODE",
+       batch.name "SOURCE",
+       rcta.trx_date "DATE",
+       rcta.creation_date "CREATION DATE",
+       rcta.last_update_date "LAST UPDATE DATE",
+       rcta.trx_number "INVOICE NUMBER",
+       rcta.interface_header_attribute1 "REFERENCE",
+       (select trx_number
+          from apps.ra_customer_trx_all rcta_cross
+         where rcta_cross.customer_trx_id = rcta.RELATED_CUSTOMER_TRX_ID
+           and rcta_cross.org_id = rcta.org_id
+           and rownum = 1) "CROSS REFERENCE",
+       rctt.name "TRANSACTION TYPE",
+       nvl(line.line_type, 'HEADER') "TYPE",
+       line.interface_line_attribute2 "ORDER TYPE",
+       rcta.status_trx "STATUS AR",
+       dist.account_class,
+       dist.amount,
+       gcc.concatenated_segments "DISTRIBUTION ACCOUNT",
+       line.line_number,
+       vat.tax_code,
+       -- rcta.customer_trx_id,
+       item.segment1 "PART NUMBER",
+       --line.link_to_cust_trx_line_id,
+       --line.customer_trx_line_id,
+       line.GLOBAL_ATTRIBUTE1 CFOP,
+       line.GLOBAL_ATTRIBUTE2 NCM,
+       line.GLOBAL_ATTRIBUTE3 "TRANSACTION CLASS",
+       line.GLOBAL_ATTRIBUTE4 "ITEM ORIGIN",
+       line.GLOBAL_ATTRIBUTE5 "ITEM FISCAL TYPE",
+       line.GLOBAL_ATTRIBUTE6 "CST_IPI",
+       line.GLOBAL_ATTRIBUTE7 "CST ICMS",
+       rcta.reason_code,
+       rcta.invoice_currency_code "CURRENCY",
+       rcta.exchange_rate "EXCHANGE RATE",
+       decode(ba.electronic_inv_status,
+              '1',
+              'Enviada',
+              '2',
+              'Finalizada',
+              '3',
+              'Error',
+              '4',
+              'Cancelada',
+              '5',
+              'Rejeitada',
+              '6',
+              'Inutilizada',
+              '7',
+              'Contingencia') "STATUS SEFAZ",
+       -- Customer
+       (SELECT HP.PARTY_NAME
+          FROM APPS.HZ_CUST_SITE_USES_ALL  HCSUA,
+               APPS.HZ_CUST_ACCT_SITES_ALL HCASA,
+               APPS.HZ_CUST_ACCOUNTS_ALL   HCAA,
+               APPS.HZ_PARTIES             HP,
+               APPS.HZ_PARTY_SITES         HPS
+         WHERE HCSUA.CUST_ACCT_SITE_ID = HCASA.CUST_ACCT_SITE_ID
+           AND HCASA.CUST_ACCOUNT_ID = HCAA.CUST_ACCOUNT_ID
+           AND HCAA.PARTY_ID = HPS.PARTY_ID
+           AND HP.PARTY_ID = HPS.PARTY_ID
+           AND HCASA.PARTY_SITE_ID = HPS.PARTY_SITE_ID
+           AND HCSUA.SITE_USE_ID = RCTA.BILL_TO_SITE_USE_ID) CUSTOMER,
+       -- Customer Number
+       (SELECT HCAA.ACCOUNT_NUMBER
+          FROM APPS.HZ_CUST_SITE_USES_ALL  HCSUA,
+               APPS.HZ_CUST_ACCT_SITES_ALL HCASA,
+               APPS.HZ_CUST_ACCOUNTS_ALL   HCAA,
+               APPS.HZ_PARTIES             HP,
+               APPS.HZ_PARTY_SITES         HPS
+         WHERE HCSUA.CUST_ACCT_SITE_ID = HCASA.CUST_ACCT_SITE_ID
+           AND HCASA.CUST_ACCOUNT_ID = HCAA.CUST_ACCOUNT_ID
+           AND HCAA.PARTY_ID = HPS.PARTY_ID
+           AND HP.PARTY_ID = HPS.PARTY_ID
+           AND HCASA.PARTY_SITE_ID = HPS.PARTY_SITE_ID
+           AND HCSUA.SITE_USE_ID = RCTA.BILL_TO_SITE_USE_ID) CUSTOMER_NUMBER,
+       -- Ship-To
+       (SELECT HCSUA.LOCATION
+          FROM APPS.HZ_CUST_SITE_USES_ALL     HCSUA,
+               APPS.HZ_CUST_ACCT_SITES_ALL    HCASA,
+               APPS.HZ_CUST_ACCOUNTS_ALL      HCAA,
+               APPS.HZ_PARTIES                HP,
+               APPS.HZ_PARTY_SITES            HPS,
+               APPS.HZ_LOCATIONS              HL,
+               APPS.HR_ALL_ORGANIZATION_UNITS HOU
+         WHERE HCSUA.CUST_ACCT_SITE_ID = HCASA.CUST_ACCT_SITE_ID
+           AND HCASA.CUST_ACCOUNT_ID = HCAA.CUST_ACCOUNT_ID
+           AND HCAA.PARTY_ID = HPS.PARTY_ID
+           AND HP.PARTY_ID = HPS.PARTY_ID
+           AND HCASA.PARTY_SITE_ID = HPS.PARTY_SITE_ID
+           AND HPS.LOCATION_ID = HL.LOCATION_ID
+           AND HCSUA.ORG_ID = HOU.ORGANIZATION_ID
+           AND HCSUA.SITE_USE_CODE = 'SHIP_TO'
+           AND HCSUA.SITE_USE_ID = RCTA.SHIP_TO_SITE_USE_ID) SHIP_TO,
+       -- Bill-To
+       (SELECT HCSUA.LOCATION
+          FROM APPS.HZ_CUST_SITE_USES_ALL     HCSUA,
+               APPS.HZ_CUST_ACCT_SITES_ALL    HCASA,
+               APPS.HZ_CUST_ACCOUNTS_ALL      HCAA,
+               APPS.HZ_PARTIES                HP,
+               APPS.HZ_PARTY_SITES            HPS,
+               APPS.HZ_LOCATIONS              HL,
+               APPS.HR_ALL_ORGANIZATION_UNITS HOU
+         WHERE HCSUA.CUST_ACCT_SITE_ID = HCASA.CUST_ACCT_SITE_ID
+           AND HCASA.CUST_ACCOUNT_ID = HCAA.CUST_ACCOUNT_ID
+           AND HCAA.PARTY_ID = HPS.PARTY_ID
+           AND HP.PARTY_ID = HPS.PARTY_ID
+           AND HCASA.PARTY_SITE_ID = HPS.PARTY_SITE_ID
+           AND HPS.LOCATION_ID = HL.LOCATION_ID
+           AND HCSUA.ORG_ID = HOU.ORGANIZATION_ID
+           AND HCSUA.SITE_USE_CODE = 'BILL_TO'
+           AND HCSUA.SITE_USE_ID = RCTA.BILL_TO_SITE_USE_ID) BILL_TO,
+       (select comments
+          from apps.ra_customer_trx_all rcta
+         where rcta.customer_trx_id = ba.customer_trx_id
+           and rownum = 1) "COMMENTS"
+--,rcta.*
+  FROM apps.ra_customer_trx_lines_all    line,
+       apps.ra_cust_trx_line_gl_dist_all dist,
+       apps.gl_code_combinations_kfv     gcc,
+       apps.ra_customer_trx_all          rcta,
+       apps.ar_vat_tax_all               vat,
+       apps.jl_br_customer_trx_exts      ba,
+       apps.ra_batch_sources_all         batch,
+       apps.ra_cust_trx_types_all        rctt,
+       apps.mtl_system_items_b           item,
+       apps.org_organization_definitions org
+ WHERE 1 = 1
+   AND rcta.customer_trx_id = ba.customer_trx_id
+   AND batch.org_id = 4330
+   AND rctt.org_id = 4330
+   AND rcta.cust_trx_type_id = rctt.cust_trx_type_id
+   AND batch.batch_source_id = rcta.batch_source_id
+   AND vat.vat_tax_id(+) = line.vat_tax_id
+   and line.LINE_TYPE IN ('TAX','LINE')
+   AND rcta.customer_trx_id = line.customer_trx_id(+)
+   AND rcta.customer_trx_id = dist.customer_trx_id
+   AND gcc.code_combination_id = dist.code_combination_id
+   AND line.customer_trx_line_id(+) = dist.customer_trx_line_id
+   AND item.inventory_item_id(+) = line.inventory_item_id -- (+) -->
+   AND item.organization_id(+) = line.warehouse_id
+   AND org.organization_id(+) = item.organization_id
+   AND rcta.org_id = 4330
+   AND dist.amount > 0
+   AND (vat.tax_code LIKE '%IPI%' OR vat.tax_code IS NULL)
+      --and rcta.CUSTOMER_TRX_ID = '64343435'
+      -- AND dist.account_class IN ('REC') --> Se precisar das informações de TAX, necessário "comentar" essa linha.
+      -- and rcta.trx_number in ('9589') --> Escolher o numero da Nota se quiser focar em alguma específica ou comentar essa linha.
+   and rctt.name in ('RM-REM DEMO ICMS 50')
+   and rcta.trx_number In
+   (
+SELECT nvl(rcta.interface_header_attribute1 "REFERENCE",
+       (select trx_number
+          from apps.ra_customer_trx_all rcta_cross
+         where rcta_cross.customer_trx_id = rcta.RELATED_CUSTOMER_TRX_ID
+           and rcta_cross.org_id = rcta.org_id
+           and rownum = 1))
+  FROM apps.ra_customer_trx_lines_all    line,
+       apps.ra_cust_trx_line_gl_dist_all dist,
+       apps.gl_code_combinations_kfv     gcc,
+       apps.ra_customer_trx_all          rcta,
+       apps.ar_vat_tax_all               vat,
+       apps.jl_br_customer_trx_exts      ba,
+       apps.ra_batch_sources_all         batch,
+       apps.ra_cust_trx_types_all        rctt,
+       apps.mtl_system_items_b           item,
+       apps.org_organization_definitions org
+ WHERE 1 = 1
+   AND rcta.customer_trx_id = ba.customer_trx_id
+   AND batch.org_id = 4330
+   AND rctt.org_id = 4330
+   AND rcta.cust_trx_type_id = rctt.cust_trx_type_id
+   AND batch.batch_source_id = rcta.batch_source_id
+   AND vat.vat_tax_id(+) = line.vat_tax_id
+   and line.LINE_TYPE IN ('TAX','LINE')
+   AND rcta.customer_trx_id = line.customer_trx_id(+)
+   AND rcta.customer_trx_id = dist.customer_trx_id
+   AND gcc.code_combination_id = dist.code_combination_id
+   AND line.customer_trx_line_id(+) = dist.customer_trx_line_id
+   AND item.inventory_item_id(+) = line.inventory_item_id -- (+) -->
+   AND item.organization_id(+) = line.warehouse_id
+   AND org.organization_id(+) = item.organization_id
+   AND rcta.org_id = 4330
+   AND dist.amount > 0
+   AND (vat.tax_code LIKE '%IPI%' OR vat.tax_code IS NULL)
+   AND rcta.trx_date between '06-MAR-2022' and '09-MAR-2022'
+      --and rcta.CUSTOMER_TRX_ID = '64343435'
+      -- AND dist.account_class IN ('REC') --> Se precisar das informações de TAX, necessário "comentar" essa linha.
+      -- and rcta.trx_number in ('9589') --> Escolher o numero da Nota se quiser focar em alguma específica ou comentar essa linha.
+   and rctt.name in ('EN-RET DEMO ICMS 50')
+   )
