@@ -1,0 +1,27 @@
+SELECT DISTINCT
+eco.codigo "ORG",
+eid.nr_declaracao "DI",
+einf.numero_nf "NFE",
+DECODE(eidl.regtrib_pis_cofins_id,104948,'ISENCAO',
+                                  104949,'SUSPENSAO',
+                                  104950,'INTEGRAL',
+                                  104951,'REDUCAO',
+                                  104952,'NAO INCIDENCIA',
+                                  104953,'IMUNIDADE') "REG.TRIB.COFINS",
+eidl.aliq_cofins "ALIQ.",
+eidl.valor_cofins "VLR.COFINS"
+
+FROM 
+ecomex.cmx_organizacoes eco,
+ecomex.imp_embarques ece,
+ecomex.imp_declaracoes eid,
+ecomex.imp_declaracoes_lin eidl,
+ecomex.imp_nota_fiscal einf
+
+WHERE
+    eid.dt_declaracao between '01/01/2020' and '31/12/2021'
+AND eidl.aliq_cofins = 10.65
+AND eid.declaracao_id = eidl.declaracao_id
+AND eid.embarque_id = ece.embarque_id
+AND ece.organizacao_id = eco.organizacao_id
+AND eid.declaracao_id = einf.declaracao_id;
