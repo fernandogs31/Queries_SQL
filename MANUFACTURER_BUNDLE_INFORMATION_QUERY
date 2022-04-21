@@ -1,0 +1,35 @@
+Select distinct
+eco.codigo,
+eid.nr_declaracao,
+eid.dt_declaracao,
+eida.adicao_num,
+etn.codigo,
+msi.segment1,
+eidl.basecalc_II
+
+from ecomex.imp_declaracoes eid,
+ecomex.imp_declaracoes_adi eida,
+ecomex.imp_declaracoes_lin eidl,
+apps.mtl_system_items msi,
+ecomex.cmx_tab_ncm etn,
+ecomex.imp_embarques eie,
+ecomex.cmx_organizacoes eco
+
+where eid.declaracao_id = eida.declaracao_id
+and eida.declaracao_adi_id = eidl.declaracao_adi_id
+and eid.embarque_id = eie.embarque_id
+and eie.organizacao_id = eco.organizacao_id
+and eidl.item_id = msi.inventory_item_id
+and eidl.class_fiscal_id = etn.ncm_id
+and eco.codigo in ('MCN',
+'GSB',
+'MRC',
+'PTC',
+'CTC',
+'CSC',
+'SGC',
+'ULC',
+'NUC')
+and eid.dt_declaracao between '01/03/2021' and '01/03/2022'
+order by eid.nr_declaracao
+/*and eid.nr_declaracao in('2102574856',*/
