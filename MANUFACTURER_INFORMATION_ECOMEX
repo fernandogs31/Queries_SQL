@@ -1,0 +1,4 @@
+SELECT *
+FROM ecomex.imp_fabricantes eif,
+     ecomex.imp_fabricantes_sites eifs
+where eif.fabric_id = eifs.fabric_id
