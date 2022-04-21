@@ -1,0 +1,12 @@
+select *
+  from gems_ont.ge_gpo_nationalization_header h,
+       gems_ont.ge_gpo_nationalization_line   l
+WHERE h.nationalization_so_line_id = l.nationalization_so_line_id
+     -- and h.process_flag = 'N'
+    --  AND L.RECORD_TYPE = 'CONV-IMPORT' 
+   --   AND H.INVENTORY_ITEM_ID = 8568808
+    --  AND L.STATUS = 'COMPLETED'
+  -- and l.document_id in (328223489,155930615)
+
+   and h.nationalization_so_line_id iN (323958640
+)
