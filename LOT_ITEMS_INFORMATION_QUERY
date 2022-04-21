@@ -1,0 +1,53 @@
+select distinct TRP_ITEM_NUM_PF
+   from MM.GEMS_TRAN_PRICE_TB
+  where TRP_SOURCE_PF = '7604' -- COMPANY CODE  --'7603' WXU  --'4108' UAS  --'3101' BAW --'0314' BOU/UMM  ---  KOE '9002' -- HLR '7604' -- HEL '5502' -- C83 '1106' -- M02 '0322'
+    and TRP_DEST_PF = '1106' -- COMPANY CODE DSP
+  --  and TRP_ITEM_NUM_PF like 'H40452LD'
+    and TRP_ITEM_NUM_PF in
+        (Select segment1
+           from apps.mtl_system_items_b a,
+                apps.MRP_SR_ASSIGNMENTS_V source_mrp,
+                apps.org_organization_definitions ood_orig
+          where 1=1
+             and source_mrp.inventory_item_id = a.inventory_item_id
+             and source_mrp.organization_id = a.organization_id
+             and source_mrp.sourcing_rule_name like '%HLR%' --- SOURCING RULE EXT
+             and a.organization_id = ood_orig.ORGANIZATION_ID
+             And ood_orig.organization_code = 'DSP' -- Org Dest DSP ID
+        --     and a.LOT_CONTROL_CODE = 2 -- 1-No Control  2-Full Control
+        --     and a.SERIAL_NUMBER_CONTROL_CODE <> 1
+             and a.CUSTOMER_ORDER_FLAG = 'Y'
+             and a.INTERNAL_ORDER_ENABLED_FLAG = 'Y'
+             and a.STOCK_ENABLED_FLAG = 'Y'
+             and a.CUSTOMER_ORDER_FLAG = 'Y'
+             and a.global_attribute1 is not null
+             and a.inventory_item_id in
+                (Select inventory_item_id
+                   from apps.mtl_system_items_b c,
+                        apps.org_organization_definitions ood_source
+                  where 1=1
+                    and ood_source.ORGANIZATION_ID  = c.organization_id
+                  -- and c.LOT_CONTROL_CODE = 1  -- 1-No Control  2-Full Control 
+                  -- and c.SERIAL_NUMBER_CONTROL_CODE <> 1
+                    and c.CUSTOMER_ORDER_FLAG = 'Y'
+                    and c.INTERNAL_ORDER_ENABLED_FLAG = 'Y'
+                    and c.STOCK_ENABLED_FLAG = 'Y'
+                    and c.CUSTOMER_ORDER_FLAG = 'Y'
+                    and ood_source.organization_code = 'HLR')); -- Org Orig WXT ID
+                    
+select segment1,INVENTORY_ITEM_STATUS_CODE, msi.* 
+  from apps.mtl_system_items_b msi 
+ where LOT_CONTROL_CODE = 2 and organization_id = 8245 
+   and INVENTORY_ITEM_STATUS_CODE <> 'Inactive'
+   and LOT_CONTROL_CODE = 2
+   and CUSTOMER_ORDER_FLAG = 'Y'
+   and INTERNAL_ORDER_ENABLED_FLAG = 'Y';
+
+select *
+   from MM.GEMS_TRAN_PRICE_TB
+  where TRP_ITEM_NUM_PF = 'S10005EZ'
+    and TRP_DEST_PF = '1106';
+
+select * from apps.org_organization_definitions where organization_code = 'M02';
+
+select * from HR.hr_all_organization_units where organization_id = 3171;
