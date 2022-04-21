@@ -1,0 +1,70 @@
+select * from apps.ra_customer_Trx_All where trx_number = '3111'; -- HEL GEMSEU_OU_EUR_IT_FIN_INSTOYJ -- BHW GEMSAS_OU_CHN_HANGWEI -- OEC GEMSAM_OU_USD_OEC_GEMS -- DAA GEMSAM_GSL_GPS_OU
+
+select * from apps.GL_DAILY_CONVERSION_TYPES;
+
+select * from apps.org_organization_definitions where organization_code = 'DAA'; -- UAS - GEMSEU_OU_EUR_GEUS_AUT -- WXU/WXB/WXC - GEMSAS_OU_CHN_WUXI -- DUS/UMM/BOU - GEMSAM_OU_LNR_GEMS_LUNAR
+
+select * from HR.hr_all_organization_units where organization_id = 13; --GEMSAM_OU_BRL_GEMS_BRA   -- BAW GEMSEU_OU_EUR_GEMSSA_FRF -- INT GEMSAM_OU_USD_GEMS_INTMDR  HLR - GEMSAS_OU_CHN_HUALUN
+
+select * from HR.hr_all_organization_units where name = 'GEMSAS_IN_USD_DIST_GEMSPARENT';
+
+select * from HR.hr_all_organization_units where name like '%OU%';      -- KOE - GEMSAS_OU_KOR_ULTRASOUND_GEMS -- BHW - GEMSAS_IN_CHN_HANGWEI_B
+                                                                         -- 8965 - GEMSAM_OU_USD_GEMS_INTMDR
+select * from apps.ra_interface_lines_All where org_id = 4330;
+
+select * from all_tables where table_name like '%LEDGER%';
+
+select * from GL_LEDGERS where description like '%GEMSAM%';
+
+
+---Interface AR
+Select RILA.interface_line_attribute1
+      ,rila.org_id
+      ,rila.creation_date
+      ,rila.request_id
+      ,rila.customer_trx_id
+      ,rila.trx_number
+      ,RILA.batch_source_name
+      ,RILA.line_gdf_attribute1 
+      ,RILA.line_gdf_attribute2
+      ,RILA.line_gdf_attribute3
+      ,RILA.line_gdf_attribute4
+      ,RILA.line_gdf_attribute5
+      ,RILA.line_gdf_attribute6
+      ,RILA.line_gdf_attribute7
+      ,rila.ORIG_SYSTEM_BILL_CUSTOMER_ID
+      ,rila.PRIMARY_SALESREP_ID
+      ,rila.CUST_TRX_TYPE_ID
+      ,RILA.*
+   from APPS.ra_interface_lines_All RILA
+  where rila.interface_line_Attribute1 in ('864101976','864101977'); -- 4981320, 4981321 PRE-PROCESSOR
+  
+---NF AFF
+Select rctl.CT_reference
+     , rctl.trx_number
+     , rctl.customer_trx_id
+     , rctl.trx_date
+     , rctt.name
+     , rctl.creation_date
+     , rctl.org_id 
+from apps.ra_customer_trx_All rctl
+    ,apps.ra_cust_trx_types_all rctt
+where rctl.cust_trx_type_id = rctt.cust_trx_type_id
+ -- and rctl.org_id = 4330
+  and trunc(rctl.creation_date) = trunc(sysdate)
+  and rctl.CT_reference in ('1755962') --('866000171','864073008'); --('864067082')
+order by ct_reference  ;
+
+--NF INT
+Select trx_number
+     , INTERFACE_HEADER_ATTRIBUTE1
+     , customer_trx_id
+     , trx_date
+     , customer_trx_id
+     , creation_date
+     , org_id 
+from apps.ra_customer_trx_All 
+where org_id = 8965
+ -- and trunc(creation_date) = trunc(sysdate)
+  and INTERFACE_HEADER_ATTRIBUTE1 in ('1755962')
+order by INTERFACE_HEADER_ATTRIBUTE1;
