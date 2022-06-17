@@ -1,0 +1,20 @@
+SELECT eid.nr_declaracao,
+       einf.numero_nf,
+       einf.dt_emissao,
+       eie.embarque_num,
+       eie.embarque_ano,
+       ecv.codigo
+
+FROM ecomex.imp_declaracoes EID,
+     ecomex.imp_nota_fiscal EINF,
+     ecomex.imp_embarques EIE,
+     ecomex.cmx_organizacoes ECV
+
+WHERE eid.embarque_id = eie.embarque_id
+AND eid.declaracao_id = einf.declaracao_id
+AND eie.organizacao_id = ecv.organizacao_id
+AND einf.dt_emissao between '01/01/2022' and '31/03/2022';
+
+/
+select *
+from ecomex.cmx_organizacoes
