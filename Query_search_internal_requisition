@@ -1,0 +1,23 @@
+SELECT DISTINCT prha.segment1 "IR número",
+       prha.creation_date "DT_Criação",
+       DECODE (gdl.primary_source_entity_id, 6399,'FRE'
+                                           , 3210,'HEL'
+                                           , 3250,'WXC'
+                                           , 3330,'WXT') "ORG_Compra"
+       
+FROM    APPS.PO_REQUISITION_LINES_ALL prla,
+        APPS.PO_REQUISITION_HEADERS_ALL prha,
+        APPS.gems_ds_lines_all gdl
+        
+WHERE prha.requisition_header_id = prla.requisition_header_id
+AND prla.requisition_header_id = gdl.req_header_id
+AND gdl.req_header_id is not null
+AND prla.source_type_code = 'INVENTORY'
+AND prla.org_id = 4330
+AND prha.creation_date >= '01/07/21'
+AND gdl.primary_source_entity_id in (6399,3210,3250,3330)
+
+ORDER BY DECODE (gdl.primary_source_entity_id, 6399,'FRE'
+                                           , 3210,'HEL'
+                                           , 3250,'WXC'
+                                           , 3330,'WXT');
