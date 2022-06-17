@@ -1,0 +1,107 @@
+SELECT  eie.referencia "Processo",
+        ectb.descricao "Origem",
+        ectb1.descricao "Destino",
+        eic.peso_bruto "Peso",
+        eicl.qtde "Volume",
+        (eid.vrt_fr_mn + eid.vrt_sg_mn + eid.vrt_fob_mn) "CIF",
+        etii.valor_mn "I.I.",
+        etipi.valor_mn "I.P.I",
+        etipis.valor_mn "PIS",
+        etic.valor_mn "COFINS",
+        etsis.valor_mn "Siscomex",
+        eticms.valor_mn "ICMS"
+        
+FROM ecomex.imp_embarques eie,
+     ecomex.imp_conhecimentos eic,
+     ecomex.imp_conhecimentos_lin eicl,
+     ecomex.cmx_tabelas_b ectb,
+     ecomex.cmx_tabelas_b ectb1,
+     ecomex.imp_declaracoes eid,
+     ecomex.imp_numerarios_dsp eind,
+     ecomex.cmx_vw_numerarios_param ecnp,
+     ecomex.imp_numerarios_ebq eine,
+     (Select eind.valor_mn, eie.embarque_id
+         from  ecomex.cmx_vw_numerarios_param ecnp,
+         ecomex.imp_numerarios_ebq eine, 
+         ecomex.imp_embarques eie,
+         ecomex.imp_numerarios_dsp eind
+         where eind.numerario_id = eine.numerario_id 
+         AND eine.embarque_id = eie.embarque_id
+         AND eind.numer_param_id = ecnp.numer_param_id 
+         AND ecnp.codigo_numerario = 'II') etii,
+     (Select eind.valor_mn, eie.embarque_id
+         from  ecomex.cmx_vw_numerarios_param ecnp,
+         ecomex.imp_numerarios_ebq eine, 
+         ecomex.imp_embarques eie,
+         ecomex.imp_numerarios_dsp eind
+         where eind.numerario_id = eine.numerario_id 
+         AND eine.embarque_id = eie.embarque_id
+         AND eind.numer_param_id = ecnp.numer_param_id 
+         AND ecnp.codigo_numerario = 'IPI') etipi,
+     (Select eind.valor_mn, eie.embarque_id
+         from  ecomex.cmx_vw_numerarios_param ecnp,
+         ecomex.imp_numerarios_ebq eine, 
+         ecomex.imp_embarques eie,
+         ecomex.imp_numerarios_dsp eind
+         where eind.numerario_id = eine.numerario_id 
+         AND eine.embarque_id = eie.embarque_id
+         AND eind.numer_param_id = ecnp.numer_param_id 
+         AND ecnp.codigo_numerario = 'PIS') etipis,
+     (Select eind.valor_mn, eie.embarque_id
+         from  ecomex.cmx_vw_numerarios_param ecnp,
+         ecomex.imp_numerarios_ebq eine, 
+         ecomex.imp_embarques eie,
+         ecomex.imp_numerarios_dsp eind
+         where eind.numerario_id = eine.numerario_id 
+         AND eine.embarque_id = eie.embarque_id
+         AND eind.numer_param_id = ecnp.numer_param_id 
+         AND ecnp.codigo_numerario = 'COFINS') etic,
+    (Select eind.valor_mn, eie.embarque_id
+         from  ecomex.cmx_vw_numerarios_param ecnp,
+         ecomex.imp_numerarios_ebq eine, 
+         ecomex.imp_embarques eie,
+         ecomex.imp_numerarios_dsp eind
+         where eind.numerario_id = eine.numerario_id 
+         AND eine.embarque_id = eie.embarque_id
+         AND eind.numer_param_id = ecnp.numer_param_id 
+         AND ecnp.codigo_numerario = 'TXSISCOMEX') etsis,
+(Select eind.valor_mn, eie.embarque_id
+         from  ecomex.cmx_vw_numerarios_param ecnp,
+         ecomex.imp_numerarios_ebq eine, 
+         ecomex.imp_embarques eie,
+         ecomex.imp_numerarios_dsp eind
+         where eind.numerario_id = eine.numerario_id 
+         AND eine.embarque_id = eie.embarque_id
+         AND eind.numer_param_id = ecnp.numer_param_id 
+         AND ecnp.codigo_numerario in('ICMS', 'ICMS COMP','DCC_ICMSCOMPL_AP')) eticms
+         
+WHERE eie.conhec_id = eic.conhec_id
+AND eic.local_embarque_id = ectb.tabela_id
+AND eic.URFE_id = ectb1.tabela_id
+AND eic.conhec_id = eicl.conhec_id
+AND eie.embarque_id = eid.embarque_id
+AND eid.embarque_id = etii.embarque_id
+AND eid.embarque_id = etipi.embarque_id
+AND eid.embarque_id = etipis.embarque_id
+AND eid.embarque_id = etic.embarque_id
+AND eid.embarque_id = etsis.embarque_id
+AND eid.embarque_id = eticms.embarque_id
+
+
+/
+Select eind.valor_mn 
+         from  ecomex.cmx_vw_numerarios_param ecnp,ecomex.imp_numerarios_ebq eine , ecomex.imp_embarques eie,ecomex.imp_numerarios_dsp eind
+         where eind.numerario_id = eine.numerario_id 
+         AND eine.embarque_id = eie.embarque_id 
+         AND eind.numer_param_id = ecnp.numer_param_id 
+         AND ecnp.codigo_numerario = 'IPI'
+/
+   Select distinct  ecnp.codigo_numerario
+         from  ecomex.cmx_vw_numerarios_param ecnp,
+         ecomex.imp_numerarios_ebq eine, 
+         ecomex.imp_embarques eie,
+         ecomex.imp_numerarios_dsp eind
+         where eind.numerario_id = eine.numerario_id 
+         AND eine.embarque_id = eie.embarque_id
+         AND eind.numer_param_id = ecnp.numer_param_id 
+         AND ecnp.codigo_numerario like '%ICMS%'
